@@ -2,8 +2,8 @@
 
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useState } from "react";
-import Input from "./Input";
-import Label from "./Label";
+import Input from "../form/Input";
+import Label from "../form/Label";
 
 interface ContactFormInputs {
   name: string;
