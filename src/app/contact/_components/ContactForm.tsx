@@ -16,22 +16,22 @@ export default function ContactForm() {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<ContactFormInputs>({ mode: "onSubmit" });
 
   const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(
     null
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit: SubmitHandler<ContactFormInputs> = async (data) => {
     console.log("送信データ:", data);
     setSubmitStatus(null);
-    setIsSubmitting(true);
 
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      console.log("送信中...");
 
       const response = await fetch(
         "https://1hmfpsvto6.execute-api.ap-northeast-1.amazonaws.com/dev/contacts",
@@ -69,8 +69,6 @@ export default function ContactForm() {
         console.error("予期しないエラーが発生しました");
       }
       setSubmitStatus("error");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -93,6 +91,7 @@ export default function ContactForm() {
           <Label htmlFor="name">お名前</Label>
           <Input
             id="name"
+            disabled={isSubmitting}
             {...register("name", {
               required: "お名前は必須です。",
               maxLength: {
@@ -110,6 +109,7 @@ export default function ContactForm() {
           <Input
             id="email"
             type="email"
+            disabled={isSubmitting}
             {...register("email", {
               required: "メールアドレスは必須です。",
               pattern: {
@@ -128,6 +128,7 @@ export default function ContactForm() {
             id="message"
             as="textarea"
             rows={8}
+            disabled={isSubmitting}
             {...register("message", {
               required: "本文は必須です。",
               maxLength: {
