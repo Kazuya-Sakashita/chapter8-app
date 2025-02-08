@@ -24,47 +24,26 @@ type InputProps<T extends ValidElement = "input"> = {
   errors?: FieldError;
 } & ComponentPropsWithoutRef<T>;
 
-// `React.FC` を適用した Input コンポーネント
 const InputComponent = <T extends ValidElement>(
   { as, errors, className, ...props }: InputProps<T>,
   ref: ForwardedRef<RefType<T>>
 ) => {
   const Component = (as || "input") as ElementType;
 
-  console.log("===== Debug Info =====");
-  console.log("Component Type:", Component, "Typeof:", typeof Component);
-  console.log(
-    "Ref Type:",
-    ref,
-    "Typeof Ref:",
-    typeof ref,
-    "Is Function:",
-    typeof ref === "function",
-    "Is Object:",
-    typeof ref === "object"
-  );
-  console.log("Props Type:", props);
+  // デバッグコードを追加
+  console.log("===== Input Debug =====");
+  console.log("Component:", Component);
+  console.log("Errors:", errors);
+  console.log("Message in errors:", errors?.message);
 
   return (
     <div className="w-full">
       <Component
         {...props}
         ref={(el: RefType<T> | null) => {
-          console.log("==== Ref Assignment Debug ====");
-          console.log("Element Received:", el);
-          console.log("Typeof Element:", typeof el);
-          console.log("Instanceof Input:", el instanceof HTMLInputElement);
-          console.log(
-            "Instanceof Textarea:",
-            el instanceof HTMLTextAreaElement
-          );
-          console.log("Instanceof Select:", el instanceof HTMLSelectElement);
-
           if (typeof ref === "function") {
-            console.log("Assigning to function ref");
             ref(el);
           } else if (ref && "current" in ref) {
-            console.log("Assigning to object ref");
             (ref as MutableRefObject<RefType<T> | null>).current = el;
           }
         }}
@@ -79,15 +58,10 @@ const InputComponent = <T extends ValidElement>(
   );
 };
 
-// `React.FC` を適用した形で `forwardRef` に渡す
-// forwardRef を React.FC と組み合わせるために InputComponent を分ける必要がある様子
-// forwardRef の戻り値を React.FC として型付け
 const Input: React.FC<InputProps<ValidElement>> = forwardRef(
   InputComponent
 ) as React.FC<InputProps<ValidElement>>;
 
-Input.displayName = "Input"; // ESLint対策
-
-console.log("DisplayName:", Input.displayName);
+Input.displayName = "Input";
 
 export default Input;

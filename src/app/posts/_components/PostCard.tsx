@@ -8,7 +8,7 @@ type Props = {
   isDetail?: boolean;
 };
 
-function PostCard({ post, isDetail = false }: Props) {
+const PostCard: React.FC<Props> = ({ post, isDetail = false }) => {
   console.log("Rendering PostCard", post.id);
 
   // `useMemo` で日付のフォーマットをキャッシュ
@@ -49,7 +49,7 @@ function PostCard({ post, isDetail = false }: Props) {
       </p>
     </div>
   );
-}
+};
 
 /**
  * `propsAreEqual` は、React.memo のカスタム比較関数。

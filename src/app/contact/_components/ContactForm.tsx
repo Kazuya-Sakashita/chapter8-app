@@ -11,7 +11,7 @@ interface ContactFormInputs {
   message: string;
 }
 
-export default function ContactForm() {
+const ContactForm: React.FC = function ContactForm() {
   const {
     register,
     handleSubmit,
@@ -26,6 +26,7 @@ export default function ContactForm() {
   const onSubmit: SubmitHandler<ContactFormInputs> = async (data) => {
     console.log("送信データ:", data);
     setSubmitStatus(null);
+    reset();
 
     try {
       const controller = new AbortController();
@@ -160,4 +161,6 @@ export default function ContactForm() {
       </form>
     </div>
   );
-}
+};
+
+export default ContactForm;

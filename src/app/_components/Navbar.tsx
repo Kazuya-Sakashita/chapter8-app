@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 
-export default function Navbar() {
+const Navbar: React.FC = function Navbar() {
   return (
     <nav className="bg-gray-800 text-white w-full">
       <div className="container mx-auto flex justify-between items-center p-6">
@@ -18,4 +18,6 @@ export default function Navbar() {
       </div>
     </nav>
   );
-}
+};
+
+export default Navbar;
