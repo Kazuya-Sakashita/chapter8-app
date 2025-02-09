@@ -4,17 +4,21 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import PostCard from "../_components/PostCard";
-import { Post } from "../../types/post";
+import { fetchPostById } from "../../lib/microCmsApi"; // 共通APIを使用
+import { MicroCmsPost } from "@/app/_types/MicroCmsPost";
 
 export default function PostDetail() {
   const params = useParams();
-  console.log("useParams():", params); // デバッグ用
+  console.log("params:", params);
 
-  // `id` または `postId` で取得
-  const postId = params.id || params.postId;
-  console.log("postId:", postId); // 確認用
+  let postId = params.id || params.postId; // `id` or `postId`
 
-  const [post, setPost] = useState<Post | null>(null);
+  // `postId` を `string` に変換（`string[]` の可能性を考慮）
+  if (Array.isArray(postId)) {
+    postId = postId.join("");
+  }
+
+  const [post, setPost] = useState<MicroCmsPost | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,26 +29,11 @@ export default function PostDetail() {
       return;
     }
 
-    const fetchPost = async () => {
+    const loadPost = async () => {
       try {
         console.log(`Fetching post with ID: ${postId}`);
-
-        const res = await fetch(
-          `https://1hmfpsvto6.execute-api.ap-northeast-1.amazonaws.com/dev/posts/${postId}`
-        );
-
-        console.log("Response status:", res.status);
-
-        if (!res.ok) throw new Error("データの取得に失敗しました");
-
-        const data = await res.json();
-        console.log("Fetched Post Data:", data);
-        // データ構造を確認し、postオブジェクトをセット
-        if (data.post) {
-          setPost(data.post);
-        } else {
-          throw new Error("APIレスポンスに post データが含まれていません");
-        }
+        const data = await fetchPostById(postId); // 修正: `postId` を渡す
+        setPost(data);
       } catch (err) {
         console.error("Error fetching post:", err);
         setError(err instanceof Error ? err.message : "エラーが発生しました");
@@ -53,7 +42,7 @@ export default function PostDetail() {
       }
     };
 
-    fetchPost();
+    loadPost();
   }, [postId]);
 
   if (loading) return <p>Loading...</p>;
@@ -65,7 +54,7 @@ export default function PostDetail() {
       {/* サムネイル画像 */}
       <div className="relative w-full h-60">
         <Image
-          src={post.thumbnailUrl || "/default-thumbnail.jpg"} // 空の場合のデフォルト画像
+          src={post.thumbnail?.url || "/default-thumbnail.jpg"} // 修正: `post.thumbnail?.url` を使用
           alt={post.title}
           fill
           className="object-cover rounded-lg"
