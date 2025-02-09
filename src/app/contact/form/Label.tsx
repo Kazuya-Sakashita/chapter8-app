@@ -9,7 +9,7 @@ interface LabelProps {
 }
 
 const Label: React.FC<LabelProps> = ({ htmlFor, children, message }) => {
-  console.log("Label Props:", { htmlFor, children, message });
+  // console.log("Label Props:", { htmlFor, children, message });
   return (
     <label htmlFor={htmlFor} className="w-[240px] font-bold text-gray-800">
       {children}

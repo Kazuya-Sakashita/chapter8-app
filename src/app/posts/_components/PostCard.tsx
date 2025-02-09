@@ -1,10 +1,10 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Post } from "../../types/post";
+import { MicroCmsPost } from "@/app/_types/MicroCmsPost";
 
 type Props = {
-  post: Post;
+  post: MicroCmsPost;
   isDetail?: boolean;
 };
 
@@ -27,6 +27,8 @@ const PostCard: React.FC<Props> = ({ post, isDetail = false }) => {
     }).format(date);
   }, [post.createdAt]);
 
+  // console.log("postデータ:", post);
+
   return (
     <div className={`bg-white ${isDetail ? "" : " p-4 border mt-8"}`}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -37,7 +39,7 @@ const PostCard: React.FC<Props> = ({ post, isDetail = false }) => {
               key={index}
               className="text-sm text-blue-700 px-2 py-1 rounded border border-blue-700"
             >
-              {category}
+              {category.name}
             </span>
           ))}
         </div>

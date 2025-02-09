@@ -30,12 +30,6 @@ const InputComponent = <T extends ValidElement>(
 ) => {
   const Component = (as || "input") as ElementType;
 
-  // デバッグコードを追加
-  console.log("===== Input Debug =====");
-  console.log("Component:", Component);
-  console.log("Errors:", errors);
-  console.log("Message in errors:", errors?.message);
-
   return (
     <div className="w-full">
       <Component
