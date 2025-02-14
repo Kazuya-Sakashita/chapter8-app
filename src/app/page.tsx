@@ -3,11 +3,11 @@
 import Link from "next/link";
 import PostCard from "./posts/_components/PostCard";
 import { useEffect, useState } from "react";
-import { fetchPosts } from "./lib/microCmsApi";
-import { MicroCmsPost } from "./_types/MicroCmsPost";
+import { fetchPosts } from "./lib/prismaApi";
+import { Post } from "./_types/post";
 
 export default function PostsPage() {
-  const [posts, setPosts] = useState<MicroCmsPost[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,8 +15,12 @@ export default function PostsPage() {
     const loadPosts = async () => {
       try {
         const data = await fetchPosts(); // 共通関数を利用
+        console.log(
+          "✅ `loadPosts` で取得したデータ:",
+          JSON.stringify(data, null, 2)
+        ); // デバッグ
         setPosts(data);
-        console.log(data);
+        console.log("loadPosts data", data);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -38,6 +42,8 @@ export default function PostsPage() {
   if (error) {
     return <div>エラー: {error}</div>; // エラーメッセージを表示
   }
+
+  console.log(posts);
 
   return (
     <div>
