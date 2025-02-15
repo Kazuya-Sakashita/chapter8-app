@@ -14,9 +14,9 @@ type PostFromPrisma = {
   title: string;
   content: string;
   thumbnailUrl: string;
-  createdAt: string; // Prisma の Date → string に変換
+  createdAt: string;
   updatedAt: string;
-  postCategories: PostCategoryType[];
+  categories: { id: number; name: string }[];
 };
 
 /**
@@ -39,21 +39,31 @@ export const fetchPosts = async (): Promise<Post[]> => {
     );
 
     // `data.posts` の存在チェック
-    if (!data || !data.posts || !Array.isArray(data.posts)) {
+    if (!data || !Array.isArray(data.posts) || data.posts.length === 0) {
       console.error("❌ `posts` が正しく取得できませんでした:", data);
       throw new Error("APIレスポンスが不正です: `posts` が含まれていません");
     }
 
     // `categories` を正しく取得
-    const formattedPosts = data.posts.map((post: any) => ({
-      id: post.id,
-      title: post.title,
-      content: post.content,
-      createdAt: post.createdAt,
-      updatedAt: post.updatedAt,
-      thumbnailUrl: post.thumbnailUrl,
-      categories: post.categories ?? [], // `categories` をそのまま使用
-    }));
+    const formattedPosts = data.posts.map(
+      (post: PostFromPrisma): PostFromPrisma => {
+        console.log("Post Categories:", post.categories);
+
+        return {
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          createdAt: post.createdAt,
+          updatedAt: post.updatedAt,
+          thumbnailUrl: post.thumbnailUrl,
+          categories:
+            post.categories?.map((category: CategoryType) => ({
+              id: category.id,
+              name: category.name,
+            })) ?? [], // categories をそのまま使用
+        };
+      }
+    );
 
     console.log(
       "📝 フォーマット後のデータ:",
