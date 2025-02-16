@@ -5,6 +5,8 @@ type CategoryType = {
   name: string;
 };
 
+// TODO 型設定が重複している部分があるので、修正必要
+
 type PostCategoryType = {
   category: CategoryType;
 };
@@ -34,7 +36,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
 
     const data: { posts: PostFromPrisma[] } = await response.json();
     console.log(
-      "✅ APIレスポンス (フロントエンド):",
+      "APIレスポンス (フロントエンド):",
       JSON.stringify(data, null, 2)
     );
 
@@ -66,7 +68,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
     );
 
     console.log(
-      "📝 フォーマット後のデータ:",
+      "フォーマット後のデータ:",
       JSON.stringify(formattedPosts, null, 2)
     );
 
@@ -109,4 +111,42 @@ export const fetchPostById = async (postId: string): Promise<Post> => {
       name: pc.category.name,
     })), // `postCategories` を `categories` に変換
   };
+};
+
+/**
+ * API からカテゴリ一覧を取得
+ */
+export const fetchCategories = async (): Promise<CategoryType[]> => {
+  try {
+    const response = await fetch("/api/admin/categories");
+
+    if (!response.ok) {
+      throw new Error(
+        `データの取得に失敗しました (status: ${response.status})`
+      );
+    }
+
+    const data: { categories: CategoryType[] } = await response.json();
+    console.log(
+      "APIレスポンス (フロントエンド):",
+      JSON.stringify(data, null, 2)
+    );
+
+    // `data.categories` の存在チェック
+    if (
+      !data ||
+      !Array.isArray(data.categories) ||
+      data.categories.length === 0
+    ) {
+      console.error("`categories` が正しく取得できませんでした:", data);
+      throw new Error(
+        "APIレスポンスが不正です: `categories` が含まれていません"
+      );
+    }
+
+    return data.categories;
+  } catch (error) {
+    console.error("fetchCategories エラー:", error);
+    return []; // エラー時は空の配列を返す
+  }
 };

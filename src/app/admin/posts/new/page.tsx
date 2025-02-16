@@ -24,6 +24,9 @@ const PostForm: React.FC = function PostForm() {
     fetchCategories();
   }, []);
 
+  // TODO クリアボタンでフォーム内を消すように追加
+  // TODO カテゴリー選択を複数できるようにする
+
   return (
     <div className="max-w-[800px] mx-auto py-10">
       <h1 className="text-xl font-bold mb-10">記事作成</h1>
