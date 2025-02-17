@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchPosts } from "../../lib/prismaApi";
 import { Post } from "../../_types/post";
 import AdminPostCard from "./_components/AdminPostCard";
+import Link from "next/link";
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -43,9 +44,11 @@ export default function PostsPage() {
       <main className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-14">
           <h2 className="text-3xl">記事一覧</h2>
-          <button className="bg-blue-500 text-white hover:bg-blue-700 font-bold py-2 px-4 rounded">
-            新規作成
-          </button>
+          <Link href="/admin/posts/new">
+            <button className="bg-blue-500 text-white hover:bg-blue-700 font-bold py-2 px-4 rounded">
+              新規作成
+            </button>
+          </Link>
         </div>
         {posts.map((post) => (
           <AdminPostCard post={post} key={post.id} />

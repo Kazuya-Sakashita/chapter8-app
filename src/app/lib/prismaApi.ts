@@ -1,11 +1,11 @@
+"use client";
+
 import { Post } from "@/app/_types/post";
 
 type CategoryType = {
   id: number;
   name: string;
 };
-
-// TODO 型設定が重複している部分があるので、修正必要
 
 type PostCategoryType = {
   category: CategoryType;
