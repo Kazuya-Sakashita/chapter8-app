@@ -3,16 +3,30 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// GET リクエスト: 特定のポストを取得
 export const GET = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { postId: string } }
 ) => {
-  const { id } = params;
+  console.log(`API にリクエストが届きました: postId=${params.postId}`);
+
+  // `postId` を `number` に変換し、`NaN` チェック
+  const postId = parseInt(params.postId);
+  if (isNaN(postId)) {
+    console.error(`無効な postId: ${params.postId}`);
+    return NextResponse.json(
+      { status: "error", message: "無効な postId です" },
+      { status: 400 }
+    );
+  }
 
   try {
+    console.log(`DB から postId=${postId} の記事を取得します`);
+
+    // ポストと関連するカテゴリーを取得
     const post = await prisma.post.findUnique({
       where: {
-        id: parseInt(id),
+        id: postId,
       },
       include: {
         postCategories: {
@@ -28,92 +42,142 @@ export const GET = async (
       },
     });
 
+    // ポストが見つからない場合
+    if (!post) {
+      console.warn(`記事が見つかりませんでした: id=${postId}`);
+      return NextResponse.json(
+        { status: "error", message: "記事が見つかりません" },
+        { status: 404 }
+      );
+    }
+
+    console.log(`取得成功: id=${post.id}`, post);
     return NextResponse.json({ status: "OK", post: post }, { status: 200 });
-  } catch (error) {
-    if (error instanceof Error)
-      return NextResponse.json({ status: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("データ取得エラー:", error.message);
+      return NextResponse.json(
+        { status: "error", message: error.message },
+        { status: 500 }
+      );
+    }
+    console.error("不明なエラー:", error);
+    return NextResponse.json(
+      { status: "error", message: "サーバーエラーが発生しました" },
+      { status: 500 }
+    );
   }
 };
 
-// 記事の更新時に送られてくるリクエストのbodyの型
-interface UpdatePostRequestBody {
-  title: string;
-  content: string;
-  categories: { id: number }[];
-  thumbnailUrl: string;
-}
-
-// PUTという命名にすることで、PUTリクエストの時にこの関数が呼ばれる
+// PUT リクエスト: 記事の更新
 export const PUT = async (
   request: NextRequest,
-  { params }: { params: { id: string } } // ここでリクエストパラメータを受け取る
+  { params }: { params: { postId: string } }
 ) => {
-  // paramsの中にidが入っているので、それを取り出す
-  const { id } = params;
+  const { postId } = params;
 
-  // リクエストのbodyを取得
-  const { title, content, categories, thumbnailUrl }: UpdatePostRequestBody =
-    await request.json();
+  // postIdが文字列であれば数値に変換
+  const postIdNumber = parseInt(postId, 10); // 10は基数（通常は10進数）
+
+  // postIdがNaNでないか確認
+  if (isNaN(postIdNumber)) {
+    console.error(`無効な postId: ${postId}`);
+    return NextResponse.json(
+      { status: "error", message: "無効な postId です" },
+      { status: 400 }
+    );
+  }
+
+  // リクエストのデータを受け取る
+  const {
+    title,
+    content,
+    categories,
+    thumbnailUrl,
+  }: {
+    title: string;
+    content: string;
+    categories: number[];
+    thumbnailUrl: string;
+  } = await request.json();
 
   try {
-    // idを指定して、Postを更新
+    // 投稿を更新
     const post = await prisma.post.update({
-      where: {
-        id: parseInt(id),
-      },
-      data: {
-        title,
-        content,
-        thumbnailUrl,
-      },
+      where: { id: postIdNumber }, // 数値に変換したpostIdを使用
+      data: { title, content, thumbnailUrl },
     });
 
-    // 一旦、記事とカテゴリーの中間テーブルのレコードを全て削除
+    // 既存のポストカテゴリーを削除
     await prisma.postCategory.deleteMany({
-      where: {
-        postId: parseInt(id),
-      },
+      where: { postId: post.id },
     });
 
-    // 記事とカテゴリーの中間テーブルのレコードをDBに生成
-    // 本来複数同時生成には、createManyというメソッドがあるが、sqliteではcreateManyが使えないので、for文1つずつ実施
-    for (const category of categories) {
-      await prisma.postCategory.create({
-        data: {
-          postId: post.id,
-          categoryId: category.id,
-        },
+    // 新しいカテゴリを追加
+    if (categories.length > 0) {
+      const categoryData = categories.map((categoryId) => ({
+        postId: post.id,
+        categoryId: categoryId,
+      }));
+      await prisma.postCategory.createMany({
+        data: categoryData,
       });
     }
 
-    // レスポンスを返す
     return NextResponse.json({ status: "OK", post: post }, { status: 200 });
-  } catch (error) {
-    if (error instanceof Error)
-      return NextResponse.json({ status: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("更新エラー:", error.message);
+      return NextResponse.json(
+        { status: "error", message: error.message },
+        { status: 400 }
+      );
+    }
+    console.error("不明なエラー:", error);
+    return NextResponse.json(
+      { status: "error", message: "不明なエラーが発生しました" },
+      { status: 500 }
+    );
   }
 };
 
-// DELETEという命名にすることで、DELETEリクエストの時にこの関数が呼ばれる
+// DELETE リクエスト: 記事の削除
 export const DELETE = async (
   request: NextRequest,
-  { params }: { params: { id: string } } // ここでリクエストパラメータを受け取る
+  { params }: { params: { postId: string } }
 ) => {
-  // paramsの中にidが入っているので、それを取り出す
-  const { id } = params;
+  // params.postIdを直接アクセス
+  const postId = parseInt(params.postId);
+
+  // postIdがNaNでないか確認
+  if (isNaN(postId)) {
+    console.error(`無効な postId: ${params.postId}`);
+    return NextResponse.json(
+      { status: "error", message: "無効な postId です" },
+      { status: 400 }
+    );
+  }
 
   try {
-    // idを指定して、Postを削除
+    // 投稿を削除
     await prisma.post.delete({
-      where: {
-        id: parseInt(id),
-      },
+      where: { id: postId },
     });
 
-    // レスポンスを返す
+    // 中間テーブルの削除
+    await prisma.postCategory.deleteMany({
+      where: { postId: postId }, // postIdに基づいて削除
+    });
+
     return NextResponse.json({ status: "OK" }, { status: 200 });
   } catch (error) {
-    if (error instanceof Error)
-      return NextResponse.json({ status: error.message }, { status: 400 });
+    console.error("削除エラー:", error);
+    return NextResponse.json(
+      {
+        status: "error",
+        message: error instanceof Error ? error.message : "不明なエラー",
+      },
+      { status: 500 }
+    );
   }
 };
