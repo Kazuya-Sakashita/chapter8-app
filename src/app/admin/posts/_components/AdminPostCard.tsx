@@ -3,6 +3,7 @@
 import { memo, useMemo } from "react";
 import { useRouter } from "next/navigation"; // 追加
 import { Post } from "@/app/_types/post";
+import { formatDate } from "@/app/lib/utils/dateUtils"; // 日付フォーマット関数をインポート
 
 type Props = {
   post: Post;
@@ -14,20 +15,9 @@ const AdminPostCard: React.FC<Props> = ({ post }) => {
   console.log("Rendering PostCard", post.id);
   console.log("カテゴリデータ:", post.categories);
 
-  // `useMemo` で日付のフォーマットをキャッシュ
+  // 日付フォーマットを共通化した関数で処理
   const formattedDate = useMemo(() => {
-    console.log("Formatting date for:", post.createdAt);
-
-    if (!post.createdAt) return "日付不明";
-
-    const date = new Date(post.createdAt);
-    if (isNaN(date.getTime())) return "日付不明";
-
-    return new Intl.DateTimeFormat("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(date);
+    return formatDate(post.createdAt); // formatDateを使用して日付をフォーマット
   }, [post.createdAt]);
 
   console.log("postデータ:", post);
