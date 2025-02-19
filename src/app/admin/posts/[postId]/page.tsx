@@ -110,7 +110,7 @@ export default function EditPostForm() {
       // 成功時に記事一覧ページにリダイレクト
       if (response.ok) {
         console.log("記事更新成功");
-        router.push("/admin/posts");
+        router.replace("/admin/posts"); // 履歴を作らずにページ遷移,ブラウザバック時の404エラー発生対策
       } else {
         console.error("記事更新に失敗:", result.message);
       }
