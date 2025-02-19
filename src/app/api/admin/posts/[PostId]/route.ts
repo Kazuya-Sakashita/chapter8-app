@@ -102,29 +102,35 @@ export const PUT = async (
   } = await request.json();
 
   try {
-    // 投稿を更新
-    const post = await prisma.post.update({
-      where: { id: postIdNumber }, // 数値に変換したpostIdを使用
-      data: { title, content, thumbnailUrl },
-    });
-
-    // 既存のポストカテゴリーを削除
-    await prisma.postCategory.deleteMany({
-      where: { postId: post.id },
-    });
-
-    // 新しいカテゴリを追加
-    if (categories.length > 0) {
-      const categoryData = categories.map((categoryId) => ({
-        postId: post.id,
-        categoryId: categoryId,
-      }));
-      await prisma.postCategory.createMany({
-        data: categoryData,
+    // トランザクションを使って一連の操作をまとめる
+    const result = await prisma.$transaction(async (prisma) => {
+      // 投稿を更新
+      const post = await prisma.post.update({
+        where: { id: postIdNumber },
+        data: { title, content, thumbnailUrl },
       });
-    }
 
-    return NextResponse.json({ status: "OK", post: post }, { status: 200 });
+      // 既存のポストカテゴリーを削除
+      await prisma.postCategory.deleteMany({
+        where: { postId: post.id },
+      });
+
+      // 新しいカテゴリを追加
+      if (categories.length > 0) {
+        const categoryData = categories.map((categoryId) => ({
+          postId: post.id,
+          categoryId: categoryId,
+        }));
+        await prisma.postCategory.createMany({
+          data: categoryData,
+        });
+      }
+
+      return post;
+    });
+
+    // 更新が成功した場合
+    return NextResponse.json({ status: "OK", post: result }, { status: 200 });
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("更新エラー:", error.message);
