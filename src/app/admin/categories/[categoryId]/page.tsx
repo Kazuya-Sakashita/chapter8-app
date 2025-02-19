@@ -28,6 +28,8 @@ export default function EditCategoryPage() {
         // フォームにカテゴリ名をセット
         setName(data.category.name || ""); // データが存在しない場合、空文字にセット
       } catch (err) {
+        // エラーがあればエラーメッセージを表示
+        console.error("エラーが発生しました:", err);
         setError("カテゴリデータの取得に失敗しました");
       }
     };
