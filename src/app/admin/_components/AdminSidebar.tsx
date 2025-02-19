@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import AdminMenu from "./AdminMenu";
 
 const AdminSidebar = () => {
   const pathname = usePathname();
@@ -12,33 +12,15 @@ const AdminSidebar = () => {
     setCurrentPath(pathname);
   }, [pathname]);
 
+  const menuItems = [
+    { href: "/admin/posts", label: "記事一覧" },
+    { href: "/admin/categories", label: "カテゴリー一覧" },
+  ];
+
   return (
     <aside className="w-64 bg-gray-200 p-4">
       <nav>
-        <ul className="space-y-2">
-          <li>
-            <Link
-              href="/admin/posts"
-              className={`block p-2 rounded ${
-                currentPath?.startsWith("/admin/posts") ? "bg-blue-100" : ""
-              }`}
-            >
-              記事一覧
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/admin/categories"
-              className={`block p-2 rounded ${
-                currentPath?.startsWith("/admin/categories")
-                  ? "bg-blue-100"
-                  : ""
-              }`}
-            >
-              カテゴリー一覧
-            </Link>
-          </li>
-        </ul>
+        <AdminMenu items={menuItems} currentPath={currentPath} />
       </nav>
     </aside>
   );
