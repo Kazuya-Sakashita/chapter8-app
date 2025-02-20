@@ -4,14 +4,10 @@ import { useEffect, useState, useMemo } from "react";
 import CategoryCard from "./_components/categoryCard";
 import { fetchCategories } from "@/app/lib/prismaApi";
 import Link from "next/link";
-
-type CategoryType = {
-  id: number;
-  name: string;
-};
+import { Category } from "@/app/_types/category";
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<CategoryType[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +19,7 @@ export default function CategoriesPage() {
 
         // `undefined` の要素を除外
         const validCategories = data.filter(
-          (c: CategoryType | undefined) => c !== undefined
+          (c: Category | undefined) => c !== undefined
         );
 
         setCategories(validCategories);

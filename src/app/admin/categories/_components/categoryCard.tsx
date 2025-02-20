@@ -2,14 +2,10 @@
 
 import { memo } from "react";
 import Link from "next/link";
-
-type CategoryType = {
-  id: number;
-  name: string;
-};
+import { Category } from "@/app/_types/category";
 
 type Props = {
-  category: CategoryType;
+  category: Category;
 };
 
 const CategoryCard: React.FC<Props> = ({ category }) => {

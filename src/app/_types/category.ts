@@ -1,18 +1,13 @@
 export type Category = {
   id: number;
   name: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-// 共通の型として `CategoryRequest` を定義
-export type CategoryRequest = {
-  name: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 // `CategoryRequest` を使って型を統一
-export type CreateCategoryRequest = CategoryRequest;
-export type UpdateCategoryRequest = CategoryRequest;
+export type CreateCategoryRequest = Category;
+export type UpdateCategoryRequest = Category;
 
 export type CategoryResponse = {
   status: "OK" | "error";
