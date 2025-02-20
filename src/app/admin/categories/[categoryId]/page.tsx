@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation"; // useParams を next/navigation からインポート
+import CategoryForm from "@/app/admin/categories/_components/CategoryForm"; // CategoryFormをインポート
 
 export default function EditCategoryPage() {
   const [name, setName] = useState<string | null>(null); // 初期値を null に変更
@@ -10,16 +11,21 @@ export default function EditCategoryPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { categoryId } = useParams(); // useParams から categoryId を取得
+  const categoryIdString = Array.isArray(categoryId)
+    ? categoryId[0]
+    : categoryId; // 配列の場合は最初の要素を使う
 
   useEffect(() => {
     // カテゴリ情報を取得
     const fetchCategory = async () => {
       if (!categoryId) return;
       try {
+        console.log(`カテゴリ情報取得中: ${categoryId}`); // デバッグログ
         const response = await fetch(`/api/admin/categories/${categoryId}`); // IDを基にカテゴリデータを取得
         const data = await response.json();
 
         if (!response.ok) {
+          console.error("エラー: カテゴリの取得に失敗", data.message);
           throw new Error(data.message || "カテゴリの取得に失敗しました");
         }
 
@@ -28,8 +34,7 @@ export default function EditCategoryPage() {
         // フォームにカテゴリ名をセット
         setName(data.category.name || ""); // データが存在しない場合、空文字にセット
       } catch (err) {
-        // エラーがあればエラーメッセージを表示
-        console.error("エラーが発生しました:", err);
+        console.error("カテゴリデータの取得に失敗:", err);
         setError("カテゴリデータの取得に失敗しました");
       }
     };
@@ -37,10 +42,11 @@ export default function EditCategoryPage() {
     fetchCategory();
   }, [categoryId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (name: string) => {
     setLoading(true);
     setError(null);
+
+    console.log("カテゴリ更新処理開始:", name); // デバッグログ
 
     try {
       const response = await fetch(`/api/admin/categories/${categoryId}`, {
@@ -52,13 +58,17 @@ export default function EditCategoryPage() {
       const result = await response.json();
 
       if (!response.ok) {
+        console.error("カテゴリ更新エラー:", result.message);
         throw new Error(result.message || "カテゴリの更新に失敗しました");
       }
+
+      console.log("カテゴリ更新成功:", result);
 
       // カテゴリ更新成功後、一覧ページにリダイレクト
       router.push("/admin/categories");
       router.refresh(); // リストを最新の状態に更新
     } catch (err) {
+      console.error("カテゴリ更新に失敗:", err);
       setError(
         err instanceof Error ? err.message : "不明なエラーが発生しました"
       );
@@ -69,6 +79,8 @@ export default function EditCategoryPage() {
 
   const handleDelete = async () => {
     if (window.confirm("このカテゴリを削除しますか？")) {
+      console.log("カテゴリ削除処理開始:", categoryIdString); // デバッグログ
+
       try {
         const response = await fetch(`/api/admin/categories/${categoryId}`, {
           method: "DELETE", // カテゴリ削除のリクエスト
@@ -77,13 +89,17 @@ export default function EditCategoryPage() {
         const result = await response.json();
 
         if (!response.ok) {
+          console.error("カテゴリ削除エラー:", result.message);
           throw new Error(result.message || "カテゴリの削除に失敗しました");
         }
+
+        console.log("カテゴリ削除成功:", result);
 
         // カテゴリ削除成功後、一覧ページにリダイレクト
         router.push("/admin/categories");
         router.refresh(); // リストを最新の状態に更新
       } catch (err) {
+        console.error("削除中にエラー発生:", err);
         setError(
           err instanceof Error ? err.message : "削除中にエラーが発生しました"
         );
@@ -100,42 +116,19 @@ export default function EditCategoryPage() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">カテゴリ編集</h1>
 
+      {/* エラーメッセージ */}
       {error && <p className="text-red-500">{error}</p>}
 
-      <form
+      {/* CategoryFormを使って編集フォームを表示 */}
+      <CategoryForm
+        initialName={name}
+        categoryId={categoryIdString} // 編集ページなのでcategoryIdを渡す
         onSubmit={handleSubmit}
-        className="bg-white p-4 border rounded-lg shadow-md"
-      >
-        {/* カテゴリ名 */}
-        <label className="block mb-2 font-bold">カテゴリ名</label>
-        <input
-          type="text"
-          value={name} // フォームにカテゴリ名を表示
-          onChange={(e) => setName(e.target.value)} // 入力時にステートを更新
-          className="w-full p-2 border rounded mb-4"
-          required
-          disabled={loading} // ローディング中はフォームを操作できないようにする
-        />
-
-        {/* 送信ボタン */}
-        <div className="flex  mt-10">
-          <button
-            type="submit"
-            className="py-3 px-6 bg-blue-500 text-white font-bold rounded-lg"
-            disabled={loading} // ローディング中はボタンを無効化
-          >
-            {loading ? "更新中..." : "更新"}
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete} // 削除ボタンの処理を実行
-            className="ml-2 py-3 px-6 font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg shadow-lg transition-all"
-            disabled={loading} // ローディング中はボタンを無効化
-          >
-            削除
-          </button>
-        </div>
-      </form>
+        buttonText="更新"
+        isLoading={loading}
+        error={error}
+        onDelete={handleDelete} // 削除ボタンの処理を渡す
+      />
     </div>
   );
 }
