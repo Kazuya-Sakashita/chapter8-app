@@ -23,16 +23,12 @@ export async function GET() {
 
     // `Date` 型のフィールドを `ISO 8601` 文字列に変換
     const formattedPosts = posts.map((post) => ({
-      id: post.id,
-      title: post.title,
-      content: post.content,
-      thumbnailUrl: post.thumbnailUrl,
-      createdAt: post.createdAt.toISOString(),
-      updatedAt: post.updatedAt.toISOString(),
-      categories: post.postCategories.map((pc) => ({
-        id: pc.category.id,
-        name: pc.category.name,
-      })), // `postCategories` → `categories` に変換
+      ...post, // `id, title, content, thumbnailUrl` をそのままコピー
+      createdAt: post.createdAt.toISOString(), // Date → string に変換
+      updatedAt: post.updatedAt.toISOString(), // Date → string に変換
+      categories: post.postCategories.map(({ category }) => ({
+        ...category, // `id, name` をそのままコピー
+      })),
     }));
 
     return NextResponse.json(
