@@ -1,9 +1,23 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server"; // ✅ NextRequest を追加
 import { PrismaClient } from "@prisma/client";
+import { Category } from "@/app/_types/category";
+import { CreatePostRequest } from "@/app/_types/post";
 
 const prisma = new PrismaClient();
 
-// GET: Fetch all posts with their categories
+// カテゴリデータを整形する関数
+const formatCategories = (
+  postCategories: {
+    category: { id: number; name: string; createdAt: Date; updatedAt: Date };
+  }[]
+): Category[] =>
+  postCategories.map(({ category }) => ({
+    ...category, // `id, name` をそのままコピー
+    createdAt: category.createdAt.toISOString(), // Date → string
+    updatedAt: category.updatedAt.toISOString(), // Date → string
+  }));
+
+// ✅ GET: 記事一覧を取得
 export async function GET() {
   try {
     const posts = await prisma.post.findMany({
@@ -20,16 +34,10 @@ export async function GET() {
     });
 
     const formattedPosts = posts.map((post) => ({
-      id: post.id,
-      title: post.title,
-      content: post.content,
-      thumbnailUrl: post.thumbnailUrl,
-      createdAt: post.createdAt.toISOString(),
-      updatedAt: post.updatedAt.toISOString(),
-      categories: post.postCategories.map((pc) => ({
-        id: pc.category.id,
-        name: pc.category.name,
-      })),
+      ...post, // `id, title, content, thumbnailUrl` などをコピー
+      createdAt: post.createdAt.toISOString(), // Date → string に変換
+      updatedAt: post.updatedAt.toISOString(), // Date → string に変換
+      categories: formatCategories(post.postCategories), // `postCategories` を `categories` に変換
     }));
 
     return NextResponse.json(
@@ -45,18 +53,10 @@ export async function GET() {
   }
 }
 
-// 記事作成のリクエストボディの型
-interface CreatePostRequestBody {
-  title: string;
-  content: string;
-  categories: number[]; // カテゴリのID配列
-  thumbnailUrl: string;
-}
-
+//  POST: 記事作成
 export const POST = async (request: NextRequest) => {
   const body = await request.json();
-  const { title, content, categories, thumbnailUrl }: CreatePostRequestBody =
-    body;
+  const { title, content, categories, thumbnailUrl }: CreatePostRequest = body;
 
   try {
     const post = await prisma.$transaction(async (tx) => {
@@ -69,15 +69,16 @@ export const POST = async (request: NextRequest) => {
       });
 
       // カテゴリと投稿の関連を中間テーブルに追加
-      for (const categoryId of categories) {
-        // `categoryId` の型が正しいか確認してから送信
-        await tx.postCategory.create({
-          data: {
-            postId: newPost.id,
-            categoryId: categoryId, // `categoryId` が数値型で送信されていることを確認
-          },
-        });
-      }
+      await Promise.all(
+        categories.map((categoryId) =>
+          tx.postCategory.create({
+            data: {
+              postId: newPost.id,
+              categoryId: Number(categoryId),
+            },
+          })
+        )
+      );
 
       return newPost;
     });
