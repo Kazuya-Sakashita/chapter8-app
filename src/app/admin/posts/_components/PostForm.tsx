@@ -3,19 +3,11 @@
 import { useState, useEffect } from "react";
 import Input from "@/app/contact/form/Input";
 import Label from "@/app/contact/form/Label";
-
-type Category = {
-  id: number;
-  name: string;
-};
+import { Post } from "@/app/_types/post";
+import { Category } from "@/app/_types/category";
 
 type PostFormProps = {
-  initialData?: {
-    title: string;
-    content: string;
-    thumbnailUrl: string;
-    selectedCategories: number[];
-  };
+  initialData?: Post;
   onSubmit: (postData: {
     title: string;
     content: string;
@@ -32,7 +24,6 @@ const PostForm: React.FC<PostFormProps> = ({
     title: "",
     content: "",
     thumbnailUrl: "",
-    selectedCategories: [],
   },
   onSubmit,
   onDelete, // 🔥 ここで onDelete を追加
@@ -44,7 +35,7 @@ const PostForm: React.FC<PostFormProps> = ({
   const [content, setContent] = useState(initialData.content);
   const [thumbnailUrl, setThumbnailUrl] = useState(initialData.thumbnailUrl);
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
-    initialData.selectedCategories
+    initialData.categories?.map((category) => category.id) || []
   );
 
   useEffect(() => {
