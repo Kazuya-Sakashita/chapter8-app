@@ -1,33 +1,25 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { MicroCmsPost } from "@/app/_types/MicroCmsPost";
+import { Post } from "@/app/_types/post";
+import { formatDate } from "@/app/lib/utils/dateUtils";
 
 type Props = {
-  post: MicroCmsPost;
+  post: Post;
   isDetail?: boolean;
 };
 
 const PostCard: React.FC<Props> = ({ post, isDetail = false }) => {
   console.log("Rendering PostCard", post.id);
+  console.log("カテゴリデータ:", post.categories);
 
   // `useMemo` で日付のフォーマットをキャッシュ
+  // 共通化した日付フォーマット関数を使用
   const formattedDate = useMemo(() => {
-    console.log("Formatting date for:", post.createdAt);
-
-    if (!post.createdAt) return "日付不明";
-
-    const date = new Date(post.createdAt);
-    if (isNaN(date.getTime())) return "日付不明";
-
-    return new Intl.DateTimeFormat("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(date);
+    return formatDate(post.createdAt);
   }, [post.createdAt]);
 
-  // console.log("postデータ:", post);
+  console.log("postデータ:", post);
 
   return (
     <div className={`bg-white ${isDetail ? "" : " p-4 border mt-8"}`}>
@@ -39,7 +31,7 @@ const PostCard: React.FC<Props> = ({ post, isDetail = false }) => {
               key={index}
               className="text-sm text-blue-700 px-2 py-1 rounded border border-blue-700"
             >
-              {category.name}
+              {category.name} {/* `category.name` を直接取得 */}
             </span>
           ))}
         </div>

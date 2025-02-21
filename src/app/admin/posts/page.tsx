@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import PostCard from "./posts/_components/PostCard";
 import { useEffect, useState } from "react";
-import { fetchPosts } from "./lib/prismaApi";
-import { Post } from "./_types/post";
+import { fetchPosts } from "../../lib/prismaApi";
+import { Post } from "../../_types/post";
+import AdminPostCard from "./_components/AdminPostCard";
+import Link from "next/link";
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -15,12 +15,8 @@ export default function PostsPage() {
     const loadPosts = async () => {
       try {
         const data = await fetchPosts(); // 共通関数を利用
-        console.log(
-          "✅ `loadPosts` で取得したデータ:",
-          JSON.stringify(data, null, 2)
-        ); // デバッグ
         setPosts(data);
-        console.log("loadPosts data", data);
+        console.log(data);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -43,15 +39,19 @@ export default function PostsPage() {
     return <div>エラー: {error}</div>; // エラーメッセージを表示
   }
 
-  console.log(posts);
-
   return (
     <div>
       <main className="container mx-auto p-4">
-        {posts.map((post) => (
-          <Link href={`/posts/${post.id}`} key={post.id}>
-            <PostCard post={post} />
+        <div className="flex justify-between items-center mb-14">
+          <h2 className="text-3xl">記事一覧</h2>
+          <Link href="/admin/posts/new">
+            <button className="bg-blue-500 text-white hover:bg-blue-700 font-bold py-2 px-4 rounded">
+              新規作成
+            </button>
           </Link>
+        </div>
+        {posts.map((post) => (
+          <AdminPostCard post={post} key={post.id} />
         ))}
       </main>
     </div>

@@ -4,21 +4,20 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import PostCard from "../_components/PostCard";
-import { fetchPostById } from "../../lib/microCmsApi"; // 共通APIを使用
-import { MicroCmsPost } from "@/app/_types/MicroCmsPost";
+import { fetchPostById } from "../../lib/prismaApi";
+import { Post } from "@/app/_types/post";
 
 export default function PostDetail() {
   const params = useParams();
   console.log("params:", params);
 
-  let postId = params.id || params.postId; // `id` or `postId`
+  let postId = params.id || params.postId;
 
-  // `postId` を `string` に変換（`string[]` の可能性を考慮）
   if (Array.isArray(postId)) {
     postId = postId.join("");
   }
 
-  const [post, setPost] = useState<MicroCmsPost | null>(null);
+  const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +31,9 @@ export default function PostDetail() {
     const loadPost = async () => {
       try {
         console.log(`Fetching post with ID: ${postId}`);
-        const data = await fetchPostById(postId); // 修正: `postId` を渡す
+        const data = await fetchPostById(postId);
+        console.log("Fetched Post Data:", data);
+
         setPost(data);
       } catch (err) {
         console.error("Error fetching post:", err);
@@ -49,12 +50,15 @@ export default function PostDetail() {
   if (error) return <p className="text-red-500">エラー: {error}</p>;
   if (!post) return <p>記事が見つかりません</p>;
 
+  console.log("Post Data:", post);
+  console.log("サムネイルURL:", post.thumbnailUrl); // 修正した変数でログ出力
+
   return (
     <div className="container mx-auto p-4">
       {/* サムネイル画像 */}
       <div className="relative w-full h-60">
         <Image
-          src={post.thumbnail?.url || "/default-thumbnail.jpg"} // 修正: `post.thumbnail?.url` を使用
+          src={post.thumbnailUrl || "/default-thumbnail.jpg"} // 修正：`post.thumbnail?.url` → `post.thumbnailUrl`
           alt={post.title}
           fill
           className="object-cover rounded-lg"
