@@ -1,14 +1,10 @@
 "use client";
 
 import { Post } from "@/app/_types/post";
-
-type CategoryType = {
-  id: number;
-  name: string;
-};
+import { Category } from "@/app/_types/category";
 
 type PostCategoryType = {
-  category: CategoryType;
+  category: Category;
 };
 
 type PostFromPrisma = {
@@ -59,7 +55,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
           updatedAt: post.updatedAt,
           thumbnailUrl: post.thumbnailUrl,
           categories:
-            post.categories?.map((category: CategoryType) => ({
+            post.categories?.map((category: Category) => ({
               id: category.id,
               name: category.name,
             })) ?? [], // categories をそのまま使用
@@ -116,7 +112,7 @@ export const fetchPostById = async (postId: string): Promise<Post> => {
 /**
  * API からカテゴリ一覧を取得
  */
-export const fetchCategories = async (): Promise<CategoryType[]> => {
+export const fetchCategories = async (): Promise<Category[]> => {
   try {
     const response = await fetch("/api/admin/categories");
 
@@ -126,7 +122,7 @@ export const fetchCategories = async (): Promise<CategoryType[]> => {
       );
     }
 
-    const data: { categories: CategoryType[] } = await response.json();
+    const data: { categories: Category[] } = await response.json();
     console.log(
       "APIレスポンス (フロントエンド):",
       JSON.stringify(data, null, 2)
