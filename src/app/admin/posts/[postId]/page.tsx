@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import PostForm from "../_components/PostForm";
 import { fetchPostById } from "@/app/lib/prismaApi";
+import { Post } from "@/app/_types/post";
+import { Category } from "@/app/_types/category";
 
 export default function EditPostPage() {
   const params = useParams();
@@ -14,12 +16,7 @@ export default function EditPostPage() {
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState({
-    title: "",
-    content: "",
-    thumbnailUrl: "",
-    selectedCategories: [] as number[],
-  });
+  const [initialData, setInitialData] = useState<Post | null>(null);
 
   useEffect(() => {
     if (!postId) {
@@ -32,10 +29,16 @@ export default function EditPostPage() {
       try {
         const data = await fetchPostById(postId);
         setInitialData({
+          id: data.id,
           title: data.title,
           content: data.content,
           thumbnailUrl: data.thumbnailUrl,
-          selectedCategories: data.categories.map((cat) => cat.id),
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          categories: data.categories.map((cat: Category) => ({
+            id: cat.id,
+            name: cat.name,
+          })), // `selectedCategories` ではなく `categories` に変換
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : "エラーが発生しました");
@@ -91,10 +94,11 @@ export default function EditPostPage() {
 
   if (loading) return <div>読み込み中...</div>;
   if (error) return <div>{error}</div>;
+  if (!initialData) return <div>記事が見つかりません</div>; // 初期データが `null` の場合の対処
 
   return (
     <PostForm
-      initialData={initialData}
+      initialData={initialData} // `categories` を渡す
       onSubmit={handleUpdatePost}
       onDelete={handleDeletePost}
       buttonText="記事を更新"
