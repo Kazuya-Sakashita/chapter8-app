@@ -4,8 +4,10 @@ import useSWR, { useSWRConfig } from "swr";
 import { Post } from "@/app/_types/post";
 import { Category } from "@/app/_types/category";
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 /**
- * API から取得する記事の型 (APIレスポンス用)
+ * API から取得する記事データの型 (API レスポンス用)
  */
 export type PostFromAPI = Omit<Post, "categories"> & {
   postCategories: {
@@ -14,7 +16,7 @@ export type PostFromAPI = Omit<Post, "categories"> & {
 };
 
 /**
- * APIから取得した記事データを適切な形に整形する関数
+ * API から取得した記事データを適切な形に整形
  */
 const formatPost = (data: PostFromAPI): Post => ({
   id: data.id,
@@ -36,7 +38,8 @@ const formatPost = (data: PostFromAPI): Post => ({
  */
 export const usePosts = () => {
   const { data, error, isLoading, mutate } = useSWR<{ posts: PostFromAPI[] }>(
-    "/api/posts"
+    "/api/posts",
+    fetcher
   );
 
   return {
@@ -52,7 +55,8 @@ export const usePosts = () => {
  */
 export const usePostById = (postId: string | null) => {
   const { data, error, isLoading, mutate } = useSWR(
-    postId ? `/api/admin/posts/${postId}` : null
+    postId ? `/api/admin/posts/${postId}` : null,
+    fetcher
   );
 
   return {
@@ -68,7 +72,8 @@ export const usePostById = (postId: string | null) => {
  */
 export const useCategories = () => {
   const { data, error, isLoading, mutate } = useSWR<{ categories: Category[] }>(
-    "/api/admin/categories"
+    "/api/admin/categories",
+    fetcher
   );
 
   return {
@@ -102,7 +107,7 @@ export const useCreatePost = () => {
 
       const newPost = await response.json();
 
-      // 記事一覧を即時更新
+      // 記事一覧のキャッシュを更新
       await mutate("/api/posts");
 
       return newPost;
@@ -141,10 +146,8 @@ export const useUpdatePost = () => {
 
       const updatedPost = await response.json();
 
-      // 記事詳細を即時更新
-      await mutate(`/api/admin/posts/${postId}`, { revalidate: true });
-
-      // 記事一覧も再フェッチ
+      // キャッシュを更新して即時反映
+      await mutate(`/api/admin/posts/${postId}`);
       await mutate("/api/posts");
 
       return updatedPost;
@@ -171,7 +174,7 @@ export const useDeletePost = () => {
 
       if (!response.ok) throw new Error("記事の削除に失敗しました");
 
-      // 記事一覧を即時更新
+      // 記事一覧のキャッシュを更新
       await mutate("/api/posts");
 
       return true;
@@ -182,4 +185,21 @@ export const useDeletePost = () => {
   };
 
   return { deletePost };
+};
+
+/**
+ * 特定のカテゴリを取得するカスタムフック
+ */
+export const useCategoryById = (categoryId: string | null) => {
+  const { data, error, isLoading, mutate } = useSWR(
+    categoryId ? `/api/admin/categories/${categoryId}` : null,
+    fetcher
+  );
+
+  return {
+    category: data?.category || null,
+    isLoading,
+    isError: error,
+    mutate,
+  };
 };
