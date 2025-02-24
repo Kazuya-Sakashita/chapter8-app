@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 
 type Props = {
   initialName?: string; // 初期カテゴリ名（編集ページ用）
@@ -21,12 +22,19 @@ const CategoryForm: React.FC<Props> = ({
   error,
   onDelete,
 }) => {
-  const [name, setName] = useState<string>(initialName);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<{ name: string }>({
+    defaultValues: { name: initialName },
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(name); // onSubmitが親コンポーネントに渡された処理を実行
-  };
+  // `initialName` が更新された場合にフォームの状態を更新
+  useEffect(() => {
+    setValue("name", initialName);
+  }, [initialName, setValue]);
 
   return (
     <div className="container mx-auto p-4">
@@ -36,18 +44,18 @@ const CategoryForm: React.FC<Props> = ({
       {error && <p className="text-red-500">{error}</p>}
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit((data) => onSubmit(data.name))}
         className="bg-white p-4 border rounded-lg shadow-md"
       >
         {/* カテゴリ名入力フィールド */}
         <label className="block mb-2 font-bold">カテゴリ名</label>
         <input
           type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          {...register("name", { required: "カテゴリ名は必須です" })}
           className="w-full p-2 border rounded"
           required
         />
+        {errors.name && <p className="text-red-500">{errors.name.message}</p>}
 
         {/* 送信ボタン */}
         <button
@@ -55,8 +63,9 @@ const CategoryForm: React.FC<Props> = ({
           className="mr-4 mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           disabled={isLoading} // ローディング中はボタンを無効化
         >
-          {isLoading ? "作成中..." : buttonText}
+          {isLoading ? "処理中..." : buttonText}
         </button>
+
         {/* 削除ボタン（categoryIdがある場合のみ表示） */}
         {categoryId && onDelete && (
           <button
