@@ -4,60 +4,53 @@ import { useState, useEffect } from "react";
 import Input from "@/app/contact/form/Input";
 import Label from "@/app/contact/form/Label";
 import { Post } from "@/app/_types/post";
-import { Category } from "@/app/_types/category";
+import { useCategories } from "@/app/lib/swrApi";
 
 type PostFormProps = {
-  initialData?: Post;
+  initialData?: Post; // 記事の初期データ（編集時）
   onSubmit: (postData: {
     title: string;
     content: string;
     thumbnailUrl: string;
     categories: number[];
-  }) => void;
-  onDelete?: () => void;
-  buttonText: string;
-  isLoading: boolean;
+  }) => void; // 記事作成・更新時の処理
+  onDelete?: () => void; // 記事削除時の処理（編集時のみ）
+  buttonText: string; // ボタンのテキスト
+  isLoading: boolean; // ロード状態
 };
 
 const PostForm: React.FC<PostFormProps> = ({
-  initialData = {
-    title: "",
-    content: "",
-    thumbnailUrl: "",
-  },
+  initialData,
   onSubmit,
-  onDelete, // 🔥 ここで onDelete を追加
+  onDelete,
   buttonText,
   isLoading,
 }) => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [title, setTitle] = useState(initialData.title);
-  const [content, setContent] = useState(initialData.content);
-  const [thumbnailUrl, setThumbnailUrl] = useState(initialData.thumbnailUrl);
+  const { categories, isLoading: isCategoriesLoading } = useCategories(); // カテゴリ一覧を取得
+
+  // フォームの入力状態を管理
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [content, setContent] = useState(initialData?.content || "");
+  const [thumbnailUrl, setThumbnailUrl] = useState(
+    initialData?.thumbnailUrl || ""
+  );
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
-    initialData.categories?.map((category) => category.id) || []
+    initialData?.categories?.map((category) => category.id) || []
   );
 
+  // `initialData` の変更時にフォームの状態を更新
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/admin/categories");
+    if (initialData) {
+      setTitle(initialData.title);
+      setContent(initialData.content);
+      setThumbnailUrl(initialData.thumbnailUrl);
+      setSelectedCategories(
+        initialData.categories.map((category) => category.id)
+      );
+    }
+  }, [initialData]);
 
-        if (!response.ok) {
-          throw new Error("カテゴリの取得に失敗しました");
-        }
-
-        const data = await response.json();
-        setCategories(data.categories);
-      } catch (error) {
-        console.error("カテゴリデータ取得エラー:", error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  // フォーム送信
+  // フォーム送信処理
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSubmit({ title, content, thumbnailUrl, categories: selectedCategories });
@@ -73,7 +66,7 @@ const PostForm: React.FC<PostFormProps> = ({
     if (id === "thumbnailUrl") setThumbnailUrl(value);
   };
 
-  // カテゴリ選択
+  // カテゴリ選択処理
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategories(
       Array.from(e.target.selectedOptions, (option) => Number(option.value))
@@ -123,19 +116,23 @@ const PostForm: React.FC<PostFormProps> = ({
         {/* カテゴリ選択 */}
         <div className="flex flex-col mb-6">
           <Label htmlFor="categories">カテゴリー</Label>
-          <select
-            id="categories"
-            multiple
-            className="p-2 border rounded-lg"
-            value={selectedCategories.map(String)}
-            onChange={handleCategoryChange}
-          >
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          {isCategoriesLoading ? (
+            <p>カテゴリを読み込み中...</p>
+          ) : (
+            <select
+              id="categories"
+              multiple
+              className="p-2 border rounded-lg"
+              value={selectedCategories.map(String)}
+              onChange={handleCategoryChange}
+            >
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* ボタン */}

@@ -1,108 +1,68 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import PostForm from "../_components/PostForm";
-import { fetchPostById } from "@/app/lib/prismaApi";
-import { Post } from "@/app/_types/post";
-import { Category } from "@/app/_types/category";
+import { usePostById, useUpdatePost, useDeletePost } from "@/app/lib/swrApi";
+import { useSWRConfig } from "swr";
 
 export default function EditPostPage() {
   const params = useParams();
   const router = useRouter();
+  const { mutate } = useSWRConfig(); // SWR のグローバル mutate を取得
+
   const postId = Array.isArray(params.postId)
     ? params.postId.join("")
     : params.postId;
+  const { post, isLoading, isError, mutate: mutatePost } = usePostById(postId);
+  const { updatePost } = useUpdatePost();
+  const { deletePost } = useDeletePost();
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<Post | null>(null);
-
-  useEffect(() => {
-    if (!postId) {
-      setError("記事IDが取得できません");
-      setLoading(false);
-      return;
-    }
-
-    const loadPost = async () => {
-      try {
-        const data = await fetchPostById(postId);
-        setInitialData({
-          id: data.id,
-          title: data.title,
-          content: data.content,
-          thumbnailUrl: data.thumbnailUrl,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          categories: data.categories.map((cat: Category) => ({
-            id: cat.id,
-            name: cat.name,
-          })), // `selectedCategories` ではなく `categories` に変換
-        });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "エラーが発生しました");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPost();
-  }, [postId]);
-
+  // 記事更新処理
   const handleUpdatePost = async (postData: {
     title: string;
     content: string;
     thumbnailUrl: string;
     categories: number[];
   }) => {
-    setLoading(true);
     try {
-      const response = await fetch(`/api/admin/posts/${postId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(postData),
-      });
+      const updatedPost = await updatePost(postId, postData);
+      console.log("記事更新成功:", updatedPost);
 
-      if (!response.ok) throw new Error("記事の更新に失敗しました");
+      // SWR の `mutate()` を使用し、データの即時更新
+      await mutatePost({ post: updatedPost.post }, false);
+      await mutate("/api/posts"); // 記事一覧のキャッシュも更新
 
       router.replace("/admin/posts");
     } catch (error) {
       console.error("更新エラー:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
+  // 記事削除処理
   const handleDeletePost = async () => {
     if (!confirm("この記事を削除しますか？")) return;
-    setLoading(true);
     try {
-      const response = await fetch(`/api/admin/posts/${postId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("記事の削除に失敗しました");
+      await deletePost(postId);
+      await mutate("/api/posts"); // 記事一覧のキャッシュを更新
 
       router.push("/admin/posts");
     } catch (error) {
       console.error("削除エラー:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  if (loading) return <div>読み込み中...</div>;
-  if (error) return <div>{error}</div>;
-  if (!initialData) return <div>記事が見つかりません</div>; // 初期データが `null` の場合の対処
+  if (isLoading) return <div>読み込み中...</div>;
+  if (isError)
+    return <div className="text-red-500">記事の取得に失敗しました</div>;
+  if (!post) return <div>記事が見つかりません</div>;
 
   return (
     <PostForm
-      initialData={initialData} // `categories` を渡す
-      onSubmit={handleUpdatePost}
-      onDelete={handleDeletePost}
+      initialData={post}
+      onSubmit={handleUpdatePost} // ✅ onSubmit を渡す
+      onDelete={handleDeletePost} // ✅ onDelete を渡す
       buttonText="記事を更新"
-      isLoading={loading}
+      isLoading={isLoading}
     />
   );
 }
