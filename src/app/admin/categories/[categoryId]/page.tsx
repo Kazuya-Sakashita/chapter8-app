@@ -3,12 +3,11 @@
 import { useRouter, useParams } from "next/navigation";
 import CategoryForm from "@/app/admin/categories/_components/CategoryForm";
 import { useAdminCategoryById } from "@/app/admin/categories/_hooks/useAdminCategories";
-import { useSWRConfig } from "swr";
+import { useAdminCategories } from "@/app/admin/categories/_hooks/useAdminCategories"; //useCategories をインポート
 
 export default function EditCategoryPage() {
   const { categoryId } = useParams();
   const router = useRouter();
-  const { mutate } = useSWRConfig();
   const categoryIdString = Array.isArray(categoryId)
     ? categoryId[0]
     : categoryId;
@@ -16,6 +15,7 @@ export default function EditCategoryPage() {
   // カスタムフックを使用してカテゴリデータを取得
   const { category, isLoading, isError } =
     useAdminCategoryById(categoryIdString);
+  const { mutate } = useAdminCategories(); //
 
   // カテゴリ更新処理
   const handleSubmit = async (name: string) => {
@@ -33,11 +33,8 @@ export default function EditCategoryPage() {
         throw new Error("カテゴリの更新に失敗しました");
       }
 
-      // SWRのキャッシュを更新
-      await mutate(`/api/admin/categories/${categoryIdString}`, undefined, {
-        revalidate: true,
-      });
-      await mutate("/api/admin/categories", undefined, { revalidate: true });
+      //`useAdminCategories` の `mutate` を使用
+      await mutate();
 
       router.push("/admin/categories");
     } catch (err) {
@@ -60,8 +57,8 @@ export default function EditCategoryPage() {
         throw new Error("カテゴリの削除に失敗しました");
       }
 
-      // SWRのキャッシュを更新
-      await mutate("/api/admin/categories", undefined, { revalidate: true });
+      //`useAdminCategories` の `mutate` を使用
+      await mutate();
 
       router.push("/admin/categories");
     } catch (err) {
