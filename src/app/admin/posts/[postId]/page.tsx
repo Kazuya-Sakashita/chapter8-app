@@ -64,7 +64,6 @@ export default function EditPostPage() {
       onSubmit={handleUpdatePost}
       onDelete={handleDeletePost}
       buttonText="記事を更新"
-      isLoading={isLoading}
     />
   );
 }

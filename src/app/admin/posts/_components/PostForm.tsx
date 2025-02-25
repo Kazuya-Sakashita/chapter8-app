@@ -8,16 +8,15 @@ import { Post } from "@/app/_types/post";
 import { useAdminCategories } from "../../categories/_hooks/useAdminCategories";
 
 type PostFormProps = {
-  initialData?: Post; // 記事の初期データ（編集時）
+  initialData?: Post;
   onSubmit: (postData: {
     title: string;
     content: string;
     thumbnailUrl: string;
     categories: number[];
-  }) => void; // 記事作成・更新時の処理
-  onDelete?: () => void; // 記事削除時の処理（編集時のみ）
-  buttonText: string; // ボタンのテキスト
-  isLoading: boolean; // ロード状態
+  }) => void;
+  onDelete?: () => void;
+  buttonText: string;
 };
 
 const PostForm: React.FC<PostFormProps> = ({
@@ -25,17 +24,15 @@ const PostForm: React.FC<PostFormProps> = ({
   onSubmit,
   onDelete,
   buttonText,
-  isLoading,
 }) => {
-  const { categories, isLoading: isCategoriesLoading } = useAdminCategories(); // カテゴリ一覧を取得
+  const { categories, isLoading: isCategoriesLoading } = useAdminCategories();
 
-  // React Hook Formの初期化
   const {
     register,
     handleSubmit,
     control,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting }, // isSubmitting を取得
   } = useForm({
     defaultValues: {
       title: initialData?.title || "",
@@ -45,7 +42,6 @@ const PostForm: React.FC<PostFormProps> = ({
     },
   });
 
-  // `initialData` の変更時にフォームの状態を更新
   useEffect(() => {
     if (initialData) {
       setValue("title", initialData.title);
@@ -140,9 +136,9 @@ const PostForm: React.FC<PostFormProps> = ({
           <button
             type="submit"
             className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg"
-            disabled={isLoading}
+            disabled={isSubmitting} // 送信中はボタンを無効化
           >
-            {isLoading ? "処理中..." : buttonText}
+            {isSubmitting ? "処理中..." : buttonText}
           </button>
 
           {/* 削除ボタン（編集時のみ表示） */}
@@ -151,7 +147,7 @@ const PostForm: React.FC<PostFormProps> = ({
               type="button"
               onClick={onDelete}
               className="bg-red-500 text-white font-bold py-2 px-4 rounded-lg ml-4"
-              disabled={isLoading}
+              disabled={isSubmitting} // 削除ボタンも無効化
             >
               削除
             </button>

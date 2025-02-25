@@ -8,7 +8,6 @@ type Props = {
   categoryId?: string; // 編集ページでカテゴリIDが必要
   onSubmit: (name: string) => void; // フォーム送信時の処理
   buttonText: string; // ボタンのテキスト
-  isLoading: boolean; // ローディング状態
   error: string | null; // エラーメッセージ
   onDelete?: () => void; // 削除ボタンの処理（オプション）
 };
@@ -18,7 +17,6 @@ const CategoryForm: React.FC<Props> = ({
   categoryId,
   onSubmit,
   buttonText,
-  isLoading,
   error,
   onDelete,
 }) => {
@@ -26,7 +24,7 @@ const CategoryForm: React.FC<Props> = ({
     register,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting }, // `isSubmitting` を取得
   } = useForm<{ name: string }>({
     defaultValues: { name: initialName },
   });
@@ -40,38 +38,35 @@ const CategoryForm: React.FC<Props> = ({
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">{buttonText}</h1>
 
-      {/* エラーメッセージ */}
       {error && <p className="text-red-500">{error}</p>}
 
       <form
         onSubmit={handleSubmit((data) => onSubmit(data.name))}
         className="bg-white p-4 border rounded-lg shadow-md"
       >
-        {/* カテゴリ名入力フィールド */}
         <label className="block mb-2 font-bold">カテゴリ名</label>
         <input
           type="text"
           {...register("name", { required: "カテゴリ名は必須です" })}
           className="w-full p-2 border rounded"
-          required
         />
         {errors.name && <p className="text-red-500">{errors.name.message}</p>}
 
-        {/* 送信ボタン */}
+        {/* 送信中はボタンを無効化 */}
         <button
           type="submit"
           className="mr-4 mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          disabled={isLoading} // ローディング中はボタンを無効化
+          disabled={isSubmitting} // `isSubmitting` を適用
         >
-          {isLoading ? "処理中..." : buttonText}
+          {isSubmitting ? "処理中..." : buttonText}
         </button>
 
-        {/* 削除ボタン（categoryIdがある場合のみ表示） */}
+        {/* 削除ボタンも同様に無効化 */}
         {categoryId && onDelete && (
           <button
             onClick={onDelete}
             className="mr-4 mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            disabled={isLoading}
+            disabled={isSubmitting} // `isSubmitting` を適用
           >
             削除
           </button>
