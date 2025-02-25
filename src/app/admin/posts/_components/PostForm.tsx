@@ -5,7 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import Input from "@/app/contact/form/Input";
 import Label from "@/app/contact/form/Label";
 import { Post } from "@/app/_types/post";
-import { useCategories } from "@/app/lib/swrApi";
+import { useAdminCategories } from "../../categories/_hooks/useAdminCategories";
 
 type PostFormProps = {
   initialData?: Post; // 記事の初期データ（編集時）
@@ -27,7 +27,7 @@ const PostForm: React.FC<PostFormProps> = ({
   buttonText,
   isLoading,
 }) => {
-  const { categories, isLoading: isCategoriesLoading } = useCategories(); // カテゴリ一覧を取得
+  const { categories, isLoading: isCategoriesLoading } = useAdminCategories(); // カテゴリ一覧を取得
 
   // React Hook Formの初期化
   const {

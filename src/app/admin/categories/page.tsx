@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import CategoryCard from "./_components/categoryCard";
-import { useCategories } from "@/app/lib/swrApi";
+import { useAdminCategories } from "@/app/admin/categories/_hooks/useAdminCategories";
 
 export default function CategoriesPage() {
-  const { categories, isLoading, isError } = useCategories(); // SWR を使用してカテゴリデータを取得
+  const { categories, isLoading, isError } = useAdminCategories(); // SWR を使用してカテゴリデータを取得
 
   if (isLoading) return <div>読み込み中...</div>;
   if (isError) return <div>エラーが発生しました</div>;

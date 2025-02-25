@@ -1,11 +1,11 @@
 "use client";
 
-import { usePosts } from "@/app/lib/swrApi";
 import AdminPostCard from "./_components/AdminPostCard";
 import Link from "next/link";
+import { useAdminPosts } from "./_hooks/useAdminPosts";
 
 export default function PostsPage() {
-  const { posts, isLoading, isError } = usePosts();
+  const { posts, isLoading, isError } = useAdminPosts();
 
   if (isLoading) {
     return <div>読み込み中...</div>;

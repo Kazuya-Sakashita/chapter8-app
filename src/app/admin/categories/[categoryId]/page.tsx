@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import CategoryForm from "@/app/admin/categories/_components/CategoryForm";
-import { useCategoryById } from "@/app/lib/swrApi";
+import { useAdminCategoryById } from "@/app/admin/categories/_hooks/useAdminCategories";
 import { useSWRConfig } from "swr";
 
 export default function EditCategoryPage() {
@@ -14,7 +14,8 @@ export default function EditCategoryPage() {
     : categoryId;
 
   // カスタムフックを使用してカテゴリデータを取得
-  const { category, isLoading, isError } = useCategoryById(categoryIdString);
+  const { category, isLoading, isError } =
+    useAdminCategoryById(categoryIdString);
 
   // カテゴリ更新処理
   const handleSubmit = async (name: string) => {

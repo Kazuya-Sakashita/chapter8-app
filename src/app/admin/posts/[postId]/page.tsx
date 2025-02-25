@@ -2,52 +2,54 @@
 
 import { useRouter, useParams } from "next/navigation";
 import PostForm from "../_components/PostForm";
-import { usePostById, useUpdatePost, useDeletePost } from "@/app/lib/swrApi";
-import { useSWRConfig } from "swr";
+import { useAdminPostById } from "../_hooks/useAdminPosts";
+import {
+  useUpdateAdminPost,
+  useDeleteAdminPost,
+} from "../_hooks/useMutateAdminPosts";
 
 export default function EditPostPage() {
   const params = useParams();
   const router = useRouter();
-  const { mutate } = useSWRConfig(); // SWR のグローバル mutate を取得
 
   const postId = Array.isArray(params.postId)
     ? params.postId.join("")
     : params.postId;
-  const { post, isLoading, isError, mutate: mutatePost } = usePostById(postId);
-  const { updatePost } = useUpdatePost();
-  const { deletePost } = useDeletePost();
 
-  // 記事更新処理
+  const { post, isError, isLoading, mutate } = useAdminPostById(postId);
+  const { updatePost } = useUpdateAdminPost();
+  const { deletePost } = useDeleteAdminPost();
+
   const handleUpdatePost = async (postData: {
     title: string;
     content: string;
     thumbnailUrl: string;
     categories: number[];
   }) => {
+    console.log("更新前の postData:", postData); // ✅ デバッグ用
+
     try {
       const updatedPost = await updatePost(postId, postData);
-      console.log("記事更新成功:", updatedPost);
+      console.log("記事更新成功:", updatedPost); // ✅ 更新後のレスポンス
 
-      // SWR の `mutate()` を使用し、データの即時更新
-      await mutatePost({ post: updatedPost.post }, false);
-      await mutate("/api/posts"); // 記事一覧のキャッシュも更新
+      await mutate();
+      await mutate("/api/posts");
 
       router.replace("/admin/posts");
     } catch (error) {
-      console.error("更新エラー:", error);
+      console.error("記事更新エラー:", error);
     }
   };
 
-  // 記事削除処理
   const handleDeletePost = async () => {
     if (!confirm("この記事を削除しますか？")) return;
     try {
       await deletePost(postId);
-      await mutate("/api/posts"); // 記事一覧のキャッシュを更新
+      await mutate("/api/posts");
 
       router.push("/admin/posts");
     } catch (error) {
-      console.error("削除エラー:", error);
+      console.error("記事削除エラー:", error);
     }
   };
 
@@ -59,8 +61,8 @@ export default function EditPostPage() {
   return (
     <PostForm
       initialData={post}
-      onSubmit={handleUpdatePost} // ✅ onSubmit を渡す
-      onDelete={handleDeletePost} // ✅ onDelete を渡す
+      onSubmit={handleUpdatePost}
+      onDelete={handleDeletePost}
       buttonText="記事を更新"
       isLoading={isLoading}
     />
