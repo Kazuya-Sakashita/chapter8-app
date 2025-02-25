@@ -41,6 +41,7 @@ export const GET = async (
         },
       },
     });
+    console.log("post:", post);
 
     // ポストが見つからない場合
     if (!post) {
@@ -78,6 +79,7 @@ export const PUT = async (
 
   // postIdが文字列であれば数値に変換
   const postIdNumber = parseInt(postId, 10); // 10は基数（通常は10進数）
+  console.log("PUTここを確認params:", postIdNumber);
 
   // postIdがNaNでないか確認
   if (isNaN(postIdNumber)) {

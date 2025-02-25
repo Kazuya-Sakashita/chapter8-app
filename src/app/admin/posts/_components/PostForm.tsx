@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import Input from "@/app/contact/form/Input";
 import Label from "@/app/contact/form/Label";
 import { Post } from "@/app/_types/post";
-import { Category } from "@/app/_types/category";
+import { useAdminCategories } from "../../categories/_hooks/useAdminCategories";
 
 type PostFormProps = {
   initialData?: Post;
@@ -16,84 +17,59 @@ type PostFormProps = {
   }) => void;
   onDelete?: () => void;
   buttonText: string;
-  isLoading: boolean;
 };
 
 const PostForm: React.FC<PostFormProps> = ({
-  initialData = {
-    title: "",
-    content: "",
-    thumbnailUrl: "",
-  },
+  initialData,
   onSubmit,
-  onDelete, // 🔥 ここで onDelete を追加
+  onDelete,
   buttonText,
-  isLoading,
 }) => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [title, setTitle] = useState(initialData.title);
-  const [content, setContent] = useState(initialData.content);
-  const [thumbnailUrl, setThumbnailUrl] = useState(initialData.thumbnailUrl);
-  const [selectedCategories, setSelectedCategories] = useState<number[]>(
-    initialData.categories?.map((category) => category.id) || []
-  );
+  const { categories, isLoading: isCategoriesLoading } = useAdminCategories();
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors, isSubmitting }, // isSubmitting を取得
+  } = useForm({
+    defaultValues: {
+      title: initialData?.title || "",
+      content: initialData?.content || "",
+      thumbnailUrl: initialData?.thumbnailUrl || "",
+      categories: initialData?.categories?.map((category) => category.id) || [],
+    },
+  });
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/admin/categories");
-
-        if (!response.ok) {
-          throw new Error("カテゴリの取得に失敗しました");
-        }
-
-        const data = await response.json();
-        setCategories(data.categories);
-      } catch (error) {
-        console.error("カテゴリデータ取得エラー:", error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  // フォーム送信
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    onSubmit({ title, content, thumbnailUrl, categories: selectedCategories });
-  };
-
-  // 入力フィールドの変更処理
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { id, value } = e.target;
-    if (id === "title") setTitle(value);
-    if (id === "content") setContent(value);
-    if (id === "thumbnailUrl") setThumbnailUrl(value);
-  };
-
-  // カテゴリ選択
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCategories(
-      Array.from(e.target.selectedOptions, (option) => Number(option.value))
-    );
-  };
+    if (initialData) {
+      setValue("title", initialData.title);
+      setValue("content", initialData.content);
+      setValue("thumbnailUrl", initialData.thumbnailUrl);
+      setValue(
+        "categories",
+        initialData.categories.map((category) => category.id)
+      );
+    }
+  }, [initialData, setValue]);
 
   return (
     <div className="max-w-[800px] mx-auto py-10">
       <h1 className="text-xl font-bold mb-10">{buttonText}</h1>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         {/* タイトル入力 */}
         <div className="flex flex-col mb-6">
           <Label htmlFor="title">タイトル</Label>
           <Input
             id="title"
-            value={title}
-            onChange={handleInputChange}
+            {...register("title", { required: "タイトルは必須です" })}
             placeholder="記事のタイトルを入力"
           />
+          {errors.title && (
+            <p className="text-red-500">{errors.title.message}</p>
+          )}
         </div>
 
         {/* 内容入力 */}
@@ -103,10 +79,12 @@ const PostForm: React.FC<PostFormProps> = ({
             id="content"
             as="textarea"
             rows={8}
-            value={content}
-            onChange={handleInputChange}
+            {...register("content", { required: "内容は必須です" })}
             placeholder="記事の内容を入力"
           />
+          {errors.content && (
+            <p className="text-red-500">{errors.content.message}</p>
+          )}
         </div>
 
         {/* サムネイルURL */}
@@ -114,8 +92,7 @@ const PostForm: React.FC<PostFormProps> = ({
           <Label htmlFor="thumbnailUrl">サムネイルURL</Label>
           <Input
             id="thumbnailUrl"
-            value={thumbnailUrl}
-            onChange={handleInputChange}
+            {...register("thumbnailUrl")}
             placeholder="サムネイル画像のURLを入力"
           />
         </div>
@@ -123,19 +100,35 @@ const PostForm: React.FC<PostFormProps> = ({
         {/* カテゴリ選択 */}
         <div className="flex flex-col mb-6">
           <Label htmlFor="categories">カテゴリー</Label>
-          <select
-            id="categories"
-            multiple
-            className="p-2 border rounded-lg"
-            value={selectedCategories.map(String)}
-            onChange={handleCategoryChange}
-          >
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          {isCategoriesLoading ? (
+            <p>カテゴリを読み込み中...</p>
+          ) : (
+            <Controller
+              control={control}
+              name="categories"
+              render={({ field }) => (
+                <select
+                  id="categories"
+                  multiple
+                  className="p-2 border rounded-lg"
+                  value={field.value.map(String)}
+                  onChange={(e) =>
+                    field.onChange(
+                      Array.from(e.target.selectedOptions, (opt) =>
+                        Number(opt.value)
+                      )
+                    )
+                  }
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+          )}
         </div>
 
         {/* ボタン */}
@@ -143,9 +136,9 @@ const PostForm: React.FC<PostFormProps> = ({
           <button
             type="submit"
             className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg"
-            disabled={isLoading}
+            disabled={isSubmitting} // 送信中はボタンを無効化
           >
-            {isLoading ? "処理中..." : buttonText}
+            {isSubmitting ? "処理中..." : buttonText}
           </button>
 
           {/* 削除ボタン（編集時のみ表示） */}
@@ -154,7 +147,7 @@ const PostForm: React.FC<PostFormProps> = ({
               type="button"
               onClick={onDelete}
               className="bg-red-500 text-white font-bold py-2 px-4 rounded-lg ml-4"
-              disabled={isLoading}
+              disabled={isSubmitting} // 削除ボタンも無効化
             >
               削除
             </button>

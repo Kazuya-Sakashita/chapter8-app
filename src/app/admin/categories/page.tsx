@@ -1,44 +1,14 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import CategoryCard from "./_components/categoryCard";
-import { fetchCategories } from "@/app/lib/prismaApi";
 import Link from "next/link";
-import { Category } from "@/app/_types/category";
+import CategoryCard from "./_components/categoryCard";
+import { useAdminCategories } from "@/app/admin/categories/_hooks/useAdminCategories";
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { categories, isLoading, isError } = useAdminCategories(); // SWR を使用してカテゴリデータを取得
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const data = await fetchCategories();
-        console.log("取得したカテゴリ:", data);
-
-        // `undefined` の要素を除外
-        const validCategories = data.filter(
-          (c: Category | undefined) => c !== undefined
-        );
-
-        setCategories(validCategories);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "不明なエラーが発生しました"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCategories();
-  }, []);
-
-  const memoizedCategories = useMemo(() => categories, [categories]); // 参照の変更を防ぐ
-
-  if (loading) return <div>読み込み中...</div>;
-  if (error) return <div>エラー: {error}</div>;
+  if (isLoading) return <div>読み込み中...</div>;
+  if (isError) return <div>エラーが発生しました</div>;
 
   return (
     <div className="container mx-auto p-4">
@@ -50,11 +20,12 @@ export default function CategoriesPage() {
           </button>
         </Link>
       </div>
-      {memoizedCategories.length === 0 ? (
+
+      {categories.length === 0 ? (
         <p>カテゴリーがありません</p>
       ) : (
         <div>
-          {memoizedCategories.map((category) => (
+          {categories.map((category) => (
             <CategoryCard key={category.id} category={category} />
           ))}
         </div>

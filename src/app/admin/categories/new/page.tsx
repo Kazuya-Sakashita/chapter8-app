@@ -6,12 +6,10 @@ import CategoryForm from "../_components/CategoryForm";
 
 export default function CreateCategoryPage() {
   const [error, setError] = useState<string | null>(null); // エラーメッセージ
-  const [loading, setLoading] = useState(false); // ローディング状態
   const router = useRouter();
 
   // カテゴリ作成の処理
   const handleCreateCategory = async (name: string) => {
-    setLoading(true);
     setError(null);
 
     try {
@@ -40,8 +38,6 @@ export default function CreateCategoryPage() {
       setError(
         err instanceof Error ? err.message : "不明なエラーが発生しました"
       );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -49,7 +45,6 @@ export default function CreateCategoryPage() {
     <CategoryForm
       onSubmit={handleCreateCategory}
       buttonText="カテゴリを作成"
-      isLoading={loading}
       error={error}
     />
   );

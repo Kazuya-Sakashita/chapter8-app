@@ -5,14 +5,14 @@ const prisma = new PrismaClient();
 
 export const GET = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { categoryId: string } }
 ) => {
-  const { id } = params;
+  const { categoryId } = params;
 
   try {
     const category = await prisma.category.findUnique({
       where: {
-        id: parseInt(id),
+        id: parseInt(categoryId),
       },
     });
 
@@ -26,15 +26,15 @@ export const GET = async (
 // PUT リクエスト: カテゴリの更新
 export const PUT = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { categoryId: string } }
 ) => {
   console.log("PUTここを確認params:", params);
-  const { id } = params;
+  const { categoryId } = params;
   const { name }: { name: string } = await request.json();
 
   // `id` を数値に変換
-  const categoryId = parseInt(id);
-  if (isNaN(categoryId)) {
+  const categoryIdNumber = parseInt(categoryId);
+  if (isNaN(categoryIdNumber)) {
     return NextResponse.json(
       { status: "error", message: "無効な categoryId です" },
       { status: 400 }
@@ -44,8 +44,8 @@ export const PUT = async (
   try {
     // カテゴリを更新
     const category = await prisma.category.update({
-      where: { id: categoryId },
-      data: { name }, // カテゴリ名を更新
+      where: { id: categoryIdNumber },
+      data: { name },
     });
 
     return NextResponse.json({ status: "OK", category }, { status: 200 });
@@ -69,14 +69,14 @@ export const PUT = async (
 // DELETE リクエスト: カテゴリの削除
 export const DELETE = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { categoryId: string } }
 ) => {
   console.log("DELETEここを確認params:", params);
-  const { id } = params;
+  const { categoryId } = params;
 
   // `id` を数値に変換
-  const categoryId = parseInt(id);
-  if (isNaN(categoryId)) {
+  const categoryIdNumber = parseInt(categoryId);
+  if (isNaN(categoryIdNumber)) {
     return NextResponse.json(
       { status: "error", message: "無効な categoryId です" },
       { status: 400 }
@@ -86,7 +86,7 @@ export const DELETE = async (
   try {
     // カテゴリを削除
     const deletedCategory = await prisma.category.delete({
-      where: { id: categoryId },
+      where: { id: categoryIdNumber },
     });
 
     return NextResponse.json(
