@@ -14,9 +14,9 @@ const PostCard: React.FC<Props> = ({ post, isDetail = false }) => {
   console.log("カテゴリデータ:", post.categories);
 
   // `useMemo` で日付のフォーマットをキャッシュ
-  // 共通化した日付フォーマット関数を使用
+  // `post.createdAt` が `undefined` の場合、`null` を渡す
   const formattedDate = useMemo(() => {
-    return formatDate(post.createdAt);
+    return formatDate(post.createdAt ?? null);
   }, [post.createdAt]);
 
   console.log("postデータ:", post);

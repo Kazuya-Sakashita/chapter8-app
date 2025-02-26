@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 
 type Props = {
-  initialName?: string; // 初期カテゴリ名（編集ページ用）
-  categoryId?: string; // 編集ページでカテゴリIDが必要
-  onSubmit: (name: string) => void; // フォーム送信時の処理
-  buttonText: string; // ボタンのテキスト
-  isLoading: boolean; // ローディング状態
-  error: string | null; // エラーメッセージ
-  onDelete?: () => void; // 削除ボタンの処理（オプション）
+  initialName?: string;
+  categoryId?: string;
+  onSubmit: (name: string) => void;
+  buttonText: string;
+  error: string | null;
+  onDelete?: () => void;
 };
 
 const CategoryForm: React.FC<Props> = ({
@@ -17,52 +17,55 @@ const CategoryForm: React.FC<Props> = ({
   categoryId,
   onSubmit,
   buttonText,
-  isLoading,
   error,
   onDelete,
 }) => {
-  const [name, setName] = useState<string>(initialName);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting }, // isSubmitting を取得
+  } = useForm<{ name: string }>({
+    defaultValues: { name: initialName },
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(name); // onSubmitが親コンポーネントに渡された処理を実行
-  };
+  useEffect(() => {
+    setValue("name", initialName);
+  }, [initialName, setValue]);
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">{buttonText}</h1>
 
-      {/* エラーメッセージ */}
       {error && <p className="text-red-500">{error}</p>}
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit((data) => onSubmit(data.name))}
         className="bg-white p-4 border rounded-lg shadow-md"
       >
-        {/* カテゴリ名入力フィールド */}
         <label className="block mb-2 font-bold">カテゴリ名</label>
         <input
           type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          {...register("name", { required: "カテゴリ名は必須です" })}
           className="w-full p-2 border rounded"
-          required
         />
+        {errors.name && <p className="text-red-500">{errors.name.message}</p>}
 
-        {/* 送信ボタン */}
+        {/* `isSubmitting` を適用してボタンの二重クリック防止 */}
         <button
           type="submit"
           className="mr-4 mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          disabled={isLoading} // ローディング中はボタンを無効化
+          disabled={isSubmitting}
         >
-          {isLoading ? "作成中..." : buttonText}
+          {isSubmitting ? "処理中..." : buttonText}
         </button>
-        {/* 削除ボタン（categoryIdがある場合のみ表示） */}
+
         {categoryId && onDelete && (
           <button
+            type="button"
             onClick={onDelete}
             className="mr-4 mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            disabled={isLoading}
+            disabled={isSubmitting} // `isSubmitting` を適用
           >
             削除
           </button>

@@ -1,104 +1,73 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import PostForm from "../_components/PostForm";
-import { fetchPostById } from "@/app/lib/prismaApi";
+import { useAdminPostById } from "../_hooks/useAdminPosts";
+import {
+  useUpdateAdminPost,
+  useDeleteAdminPost,
+} from "../_hooks/useMutateAdminPosts";
 
 export default function EditPostPage() {
   const params = useParams();
   const router = useRouter();
+
+  // URLパラメータから postId を取得
   const postId = Array.isArray(params.postId)
     ? params.postId.join("")
     : params.postId;
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState({
-    title: "",
-    content: "",
-    thumbnailUrl: "",
-    selectedCategories: [] as number[],
-  });
+  // 記事データを取得
+  const { post, isError, isLoading, mutate } = useAdminPostById(postId);
+  const { updatePost } = useUpdateAdminPost();
+  const { deletePost } = useDeleteAdminPost();
 
-  useEffect(() => {
-    if (!postId) {
-      setError("記事IDが取得できません");
-      setLoading(false);
-      return;
-    }
-
-    const loadPost = async () => {
-      try {
-        const data = await fetchPostById(postId);
-        setInitialData({
-          title: data.title,
-          content: data.content,
-          thumbnailUrl: data.thumbnailUrl,
-          selectedCategories: data.categories.map((cat) => cat.id),
-        });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "エラーが発生しました");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPost();
-  }, [postId]);
-
+  // 記事更新処理
   const handleUpdatePost = async (postData: {
     title: string;
     content: string;
     thumbnailUrl: string;
     categories: number[];
   }) => {
-    setLoading(true);
+    console.log("更新前の postData:", postData); // デバッグ用
+
     try {
-      const response = await fetch(`/api/admin/posts/${postId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(postData),
-      });
+      const updatedPost = await updatePost(postId, postData);
+      console.log("記事更新成功:", updatedPost);
 
-      if (!response.ok) throw new Error("記事の更新に失敗しました");
-
-      router.replace("/admin/posts");
+      await mutate(); // このコンポーネントで利用しているデータのみを更新
+      router.replace("/admin/posts"); // 更新後は一覧ページへ
     } catch (error) {
-      console.error("更新エラー:", error);
-    } finally {
-      setLoading(false);
+      console.error("記事更新エラー:", error);
     }
   };
 
+  // 記事削除処理
   const handleDeletePost = async () => {
     if (!confirm("この記事を削除しますか？")) return;
-    setLoading(true);
     try {
-      const response = await fetch(`/api/admin/posts/${postId}`, {
-        method: "DELETE",
-      });
+      await deletePost(postId);
 
-      if (!response.ok) throw new Error("記事の削除に失敗しました");
-
-      router.push("/admin/posts");
+      // 削除後はすぐにリダイレクトし、無駄なリクエストを防ぐ
+      router.replace("/admin/posts");
     } catch (error) {
-      console.error("削除エラー:", error);
-    } finally {
-      setLoading(false);
+      console.error("記事削除エラー:", error);
     }
   };
 
-  if (loading) return <div>読み込み中...</div>;
-  if (error) return <div>{error}</div>;
+  // ロード中の表示
+  if (isLoading) return <div>読み込み中...</div>;
+
+  // エラーまたは記事が見つからない場合
+  if (isError || !post)
+    return <div className="text-red-500">記事が見つかりません</div>;
 
   return (
     <PostForm
-      initialData={initialData}
-      onSubmit={handleUpdatePost}
-      onDelete={handleDeletePost}
+      initialData={post} // 記事データを渡す
+      onSubmit={handleUpdatePost} // 更新処理を渡す
+      onDelete={handleDeletePost} // 削除処理を渡す
       buttonText="記事を更新"
-      isLoading={loading}
     />
   );
 }
