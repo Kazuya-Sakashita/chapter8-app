@@ -4,12 +4,12 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 type Props = {
-  initialName?: string; // 初期カテゴリ名（編集ページ用）
-  categoryId?: string; // 編集ページでカテゴリIDが必要
-  onSubmit: (name: string) => void; // フォーム送信時の処理
-  buttonText: string; // ボタンのテキスト
-  error: string | null; // エラーメッセージ
-  onDelete?: () => void; // 削除ボタンの処理（オプション）
+  initialName?: string;
+  categoryId?: string;
+  onSubmit: (name: string) => void;
+  buttonText: string;
+  error: string | null;
+  onDelete?: () => void;
 };
 
 const CategoryForm: React.FC<Props> = ({
@@ -24,12 +24,11 @@ const CategoryForm: React.FC<Props> = ({
     register,
     handleSubmit,
     setValue,
-    formState: { errors, isSubmitting }, // `isSubmitting` を取得
+    formState: { errors, isSubmitting }, // isSubmitting を取得
   } = useForm<{ name: string }>({
     defaultValues: { name: initialName },
   });
 
-  // `initialName` が更新された場合にフォームの状態を更新
   useEffect(() => {
     setValue("name", initialName);
   }, [initialName, setValue]);
@@ -52,18 +51,18 @@ const CategoryForm: React.FC<Props> = ({
         />
         {errors.name && <p className="text-red-500">{errors.name.message}</p>}
 
-        {/* 送信中はボタンを無効化 */}
+        {/* `isSubmitting` を適用してボタンの二重クリック防止 */}
         <button
           type="submit"
           className="mr-4 mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          disabled={isSubmitting} // `isSubmitting` を適用
+          disabled={isSubmitting}
         >
           {isSubmitting ? "処理中..." : buttonText}
         </button>
 
-        {/* 削除ボタンも同様に無効化 */}
         {categoryId && onDelete && (
           <button
+            type="button"
             onClick={onDelete}
             className="mr-4 mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
             disabled={isSubmitting} // `isSubmitting` を適用
