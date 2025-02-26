@@ -1,12 +1,12 @@
 "use client";
 
-import { useSWRConfig } from "swr";
+import { useAdminCategories } from "../_hooks/useAdminCategories";
 
 /**
  * カテゴリを作成（管理者用）
  */
 export const useCreateAdminCategory = () => {
-  const { mutate } = useSWRConfig();
+  const { mutate } = useAdminCategories(); // 一覧のキャッシュ更新用
 
   const createCategory = async (name: string) => {
     try {
@@ -19,7 +19,7 @@ export const useCreateAdminCategory = () => {
       if (!response.ok) throw new Error("カテゴリの作成に失敗しました");
 
       const newCategory = await response.json();
-      await mutate("/api/admin/categories");
+      await mutate(); // 一覧のキャッシュを更新
 
       return newCategory;
     } catch (error) {
@@ -35,7 +35,7 @@ export const useCreateAdminCategory = () => {
  * カテゴリを更新（管理者用）
  */
 export const useUpdateAdminCategory = () => {
-  const { mutate } = useSWRConfig();
+  const { mutate } = useAdminCategories(); // 一覧のキャッシュ更新用
 
   const updateCategory = async (categoryId: string, name: string) => {
     try {
@@ -48,8 +48,7 @@ export const useUpdateAdminCategory = () => {
       if (!response.ok) throw new Error("カテゴリの更新に失敗しました");
 
       const updatedCategory = await response.json();
-      await mutate(`/api/admin/categories/${categoryId}`);
-      await mutate("/api/admin/categories");
+      await mutate(); // 一覧のキャッシュを更新
 
       return updatedCategory;
     } catch (error) {
@@ -65,7 +64,7 @@ export const useUpdateAdminCategory = () => {
  * カテゴリを削除（管理者用）
  */
 export const useDeleteAdminCategory = () => {
-  const { mutate } = useSWRConfig();
+  const { mutate } = useAdminCategories(); // 一覧のキャッシュ更新用
 
   const deleteCategory = async (categoryId: string) => {
     try {
@@ -75,7 +74,7 @@ export const useDeleteAdminCategory = () => {
 
       if (!response.ok) throw new Error("カテゴリの削除に失敗しました");
 
-      await mutate("/api/admin/categories");
+      await mutate(); // 一覧のキャッシュを更新
 
       return true;
     } catch (error) {

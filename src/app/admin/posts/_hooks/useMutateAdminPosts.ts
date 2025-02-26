@@ -1,12 +1,12 @@
 "use client";
 
-import { useSWRConfig } from "swr";
+import { useAdminPosts } from "../_hooks/useAdminPosts";
 
 /**
  * 記事を作成（管理者用）
  */
 export const useCreateAdminPost = () => {
-  const { mutate } = useSWRConfig();
+  const { mutate } = useAdminPosts(); // 記事一覧のキャッシュ更新用
 
   const createPost = async (postData: {
     title: string;
@@ -24,7 +24,7 @@ export const useCreateAdminPost = () => {
       if (!response.ok) throw new Error("記事の作成に失敗しました");
 
       const newPost = await response.json();
-      await mutate("/api/admin/posts");
+      await mutate(); // 記事一覧のキャッシュを更新
 
       return newPost;
     } catch (error) {
@@ -40,7 +40,7 @@ export const useCreateAdminPost = () => {
  * 記事を更新（管理者用）
  */
 export const useUpdateAdminPost = () => {
-  const { mutate } = useSWRConfig();
+  const { mutate } = useAdminPosts(); // 記事一覧のキャッシュ更新用
 
   const updatePost = async (
     postId: string,
@@ -51,7 +51,7 @@ export const useUpdateAdminPost = () => {
       categories: number[];
     }
   ) => {
-    console.log("送信するデータ:", postData); // ✅ デバッグ用
+    console.log("送信するデータ:", postData);
 
     try {
       const response = await fetch(`/api/admin/posts/${postId}`, {
@@ -61,14 +61,13 @@ export const useUpdateAdminPost = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json(); // ❗ エラー詳細を取得
+        const errorData = await response.json();
         console.error("APIエラー:", errorData);
         throw new Error("記事の更新に失敗しました");
       }
 
       const updatedPost = await response.json();
-      await mutate(`/api/admin/posts/${postId}`);
-      await mutate("/api/admin/posts");
+      await mutate(); // 記事一覧のキャッシュを更新
 
       return updatedPost;
     } catch (error) {
@@ -84,7 +83,7 @@ export const useUpdateAdminPost = () => {
  * 記事を削除（管理者用）
  */
 export const useDeleteAdminPost = () => {
-  const { mutate } = useSWRConfig();
+  const { mutate } = useAdminPosts(); // 記事一覧のキャッシュ更新用
 
   const deletePost = async (postId: string) => {
     try {
@@ -94,7 +93,7 @@ export const useDeleteAdminPost = () => {
 
       if (!response.ok) throw new Error("記事の削除に失敗しました");
 
-      await mutate("/api/admin/posts");
+      await mutate(); // 記事一覧のキャッシュを更新
 
       return true;
     } catch (error) {
