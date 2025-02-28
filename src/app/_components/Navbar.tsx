@@ -51,6 +51,9 @@ const Navbar: React.FC = function Navbar() {
           ) : (
             // sessionがある（ログインしている）場合
             <>
+              <Link href="/admin/posts" className="header-link">
+                管理画面
+              </Link>
               <li>
                 <button
                   onClick={handleLogout} // ログアウトボタンがクリックされたらhandleLogout関数を実行
