@@ -15,8 +15,8 @@ const Navbar: React.FC = function Navbar() {
   const handleLogout = async () => {
     // Supabaseのauth.signOut()を使ってユーザーをサインアウトさせる
     await supabase.auth.signOut();
-    // サインアウトが成功したら、ログインページに遷移
-    router.push("/login");
+    // サインアウトが成功したら、セッションをリセット
+    router.push("/login"); // ログインページに遷移
   };
 
   // ログイン状態の読み込み中は何も表示しない
@@ -26,19 +26,16 @@ const Navbar: React.FC = function Navbar() {
 
   return (
     <nav className="bg-gray-800 text-white w-full">
-      {" "}
-      {/* ナビゲーションバーのスタイル */}
       <div className="container mx-auto flex justify-between items-center p-6">
-        {" "}
-        {/* ナビゲーションバー内の配置 */}
         {/* ブログホームへのリンク */}
         <Link href="/" className="text-base font-bold">
           Blog
         </Link>
+
         {/* メニューアイテムを表示する */}
         <ul className="flex space-x-4">
-          {/* sessionがない（未ログイン）場合 */}
           {!session ? (
+            // sessionがない（未ログイン）場合
             <>
               <li>
                 <Link href="/login" className="text-base font-bold">
@@ -54,11 +51,6 @@ const Navbar: React.FC = function Navbar() {
           ) : (
             // sessionがある（ログインしている）場合
             <>
-              <li>
-                <Link href="/profile" className="text-base font-bold">
-                  プロフィール
-                </Link>
-              </li>
               <li>
                 <button
                   onClick={handleLogout} // ログアウトボタンがクリックされたらhandleLogout関数を実行

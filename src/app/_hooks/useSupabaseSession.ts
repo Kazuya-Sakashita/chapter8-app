@@ -3,13 +3,12 @@ import { Session } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
 
 export const useSupabaseSession = () => {
-  // undefind: ログイン状態ロード中, null: ログインしていない, Session: ログインしている
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [token, setToken] = useState<string | null>(null);
   const [isLoding, setIsLoding] = useState(true);
 
   useEffect(() => {
-    const fetcher = async () => {
+    const fetchSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -18,7 +17,20 @@ export const useSupabaseSession = () => {
       setIsLoding(false);
     };
 
-    fetcher();
+    fetchSession();
+
+    // セッションの変更を監視
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_, session) => {
+        setSession(session);
+        setToken(session?.access_token || null);
+      }
+    );
+
+    // コンポーネントがアンマウントされる際にリスナーを解除
+    return () => {
+      authListener?.subscription?.unsubscribe(); // 修正箇所
+    };
   }, []);
 
   return { session, isLoding, token };
