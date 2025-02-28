@@ -95,12 +95,12 @@ export const PUT = async (
     title,
     content,
     categories,
-    thumbnailUrl,
+    thumbnailImageKey,
   }: {
     title: string;
     content: string;
     categories: number[];
-    thumbnailUrl: string;
+    thumbnailImageKey: string;
   } = await request.json();
 
   try {
@@ -109,7 +109,7 @@ export const PUT = async (
       // 投稿を更新
       const post = await prisma.post.update({
         where: { id: postIdNumber },
-        data: { title, content, thumbnailUrl },
+        data: { title, content, thumbnailImageKey },
       });
 
       // 既存のポストカテゴリーを削除

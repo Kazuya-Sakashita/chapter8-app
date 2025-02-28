@@ -26,7 +26,7 @@ export default function EditPostPage() {
   const handleUpdatePost = async (postData: {
     title: string;
     content: string;
-    thumbnailUrl: string;
+    thumbnailImageKey: string;
     categories: number[];
   }) => {
     console.log("更新前の postData:", postData); // デバッグ用

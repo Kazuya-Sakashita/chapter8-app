@@ -34,7 +34,7 @@ export async function GET() {
     });
 
     const formattedPosts = posts.map((post) => ({
-      ...post, // `id, title, content, thumbnailUrl` などをコピー
+      ...post, // `id, title, content, thumbnailImageKey` などをコピー
       createdAt: post.createdAt.toISOString(), // Date → string に変換
       updatedAt: post.updatedAt.toISOString(), // Date → string に変換
       categories: formatCategories(post.postCategories), // `postCategories` を `categories` に変換
@@ -56,7 +56,8 @@ export async function GET() {
 //  POST: 記事作成
 export const POST = async (request: NextRequest) => {
   const body = await request.json();
-  const { title, content, categories, thumbnailUrl }: CreatePostRequest = body;
+  const { title, content, categories, thumbnailImageKey }: CreatePostRequest =
+    body;
 
   try {
     const post = await prisma.$transaction(async (tx) => {
@@ -64,7 +65,7 @@ export const POST = async (request: NextRequest) => {
         data: {
           title,
           content,
-          thumbnailUrl,
+          thumbnailImageKey,
         },
       });
 

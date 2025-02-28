@@ -9,7 +9,7 @@ export default function CreatePostPage() {
   const handleCreatePost = async (postData: {
     title: string;
     content: string;
-    thumbnailUrl: string;
+    thumbnailImageKey: string;
     categories: number[];
   }) => {
     try {

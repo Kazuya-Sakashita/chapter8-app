@@ -24,7 +24,7 @@ const formatPost = (data: PostFromAPI): Post => ({
   content: data.content,
   createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : "",
   updatedAt: data.updatedAt ? new Date(data.updatedAt).toISOString() : "",
-  thumbnailUrl: data.thumbnailUrl,
+  thumbnailImageKey: data.thumbnailImageKey,
   categories: data.postCategories
     ? data.postCategories.map((pc) => ({
         id: pc.category.id,

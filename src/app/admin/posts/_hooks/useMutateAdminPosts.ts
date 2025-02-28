@@ -11,7 +11,7 @@ export const useCreateAdminPost = () => {
   const createPost = async (postData: {
     title: string;
     content: string;
-    thumbnailUrl: string;
+    thumbnailImageKey: string;
     categories: number[];
   }) => {
     try {
@@ -47,7 +47,7 @@ export const useUpdateAdminPost = () => {
     postData: {
       title: string;
       content: string;
-      thumbnailUrl: string;
+      thumbnailImageKey: string;
       categories: number[];
     }
   ) => {
