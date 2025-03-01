@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useEffect, ChangeEvent } from "react";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import Input from "@/app/contact/form/Input";
 import Label from "@/app/contact/form/Label";
 import { Post } from "@/app/_types/post";
-import { supabase } from "@/utils/supabase"; // Supabaseインスタンスをインポート
-import { v4 as uuidv4 } from "uuid"; // 固有IDを生成するライブラリ
-import Image from "next/image"; // Next.js Imageをインポート
+import { supabase } from "@/utils/supabase";
+import { v4 as uuidv4 } from "uuid";
+import Image from "next/image";
 import { useAdminCategories } from "../../categories/_hooks/useAdminCategories";
 
 type PostFormProps = {
@@ -45,12 +45,14 @@ const PostForm: React.FC<PostFormProps> = ({
     },
   });
 
-  const [thumbnailImageKey, setThumbnailImageKey] = useState<string>(
-    initialData?.thumbnailImageKey || ""
-  );
-  const [thumbnailImageUrl, setThumbnailImageUrl] = useState<string | null>(
-    null
-  );
+  // useWatch でリアルタイム監視
+  const thumbnailImageKey = useWatch({ control, name: "thumbnailImageKey" });
+
+  // サムネイル画像のURLを取得
+  const thumbnailImageUrl = thumbnailImageKey
+    ? supabase.storage.from("post_thumbnail").getPublicUrl(thumbnailImageKey)
+        .data.publicUrl
+    : null;
 
   // 初期データがある場合にフォームにセットする
   useEffect(() => {
@@ -65,36 +67,14 @@ const PostForm: React.FC<PostFormProps> = ({
     }
   }, [initialData, setValue]);
 
-  // 画像URLを取得して表示する
-  useEffect(() => {
-    if (!thumbnailImageKey) return;
-
-    const fetchImageUrl = async () => {
-      const { data } = await supabase.storage
-        .from("post_thumbnail")
-        .getPublicUrl(thumbnailImageKey);
-
-      if (!data) {
-        console.error("Error fetching image URL: No data received");
-        return;
-      }
-
-      setThumbnailImageUrl(data.publicUrl);
-    };
-
-    fetchImageUrl();
-  }, [thumbnailImageKey]);
-
   // 画像ファイルが選択された場合の処理
   const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length === 0) {
-      return;
-    }
+    if (!event.target.files || event.target.files.length === 0) return;
 
     const file = event.target.files[0];
     const filePath = `private/${uuidv4()}`;
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from("post_thumbnail")
       .upload(filePath, file, { cacheControl: "3600", upsert: false });
 
@@ -103,32 +83,14 @@ const PostForm: React.FC<PostFormProps> = ({
       return;
     }
 
-    setThumbnailImageKey(data?.path || "");
-  };
-
-  // フォーム送信時の処理
-  const handleSubmitForm = async (data: {
-    title: string;
-    content: string;
-    categories: number[];
-  }) => {
-    const postData = {
-      ...data,
-      thumbnailImageKey, // 画像のキーを追加
-    };
-
-    try {
-      await onSubmit(postData);
-    } catch (error) {
-      console.error("記事作成エラー:", error);
-    }
+    setValue("thumbnailImageKey", filePath); // useForm に値をセット
   };
 
   return (
     <div className="max-w-[800px] mx-auto py-10">
       <h1 className="text-xl font-bold mb-10">{buttonText}</h1>
 
-      <form onSubmit={handleSubmit(handleSubmitForm)}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         {/* タイトル入力 */}
         <div className="flex flex-col mb-6">
           <Label htmlFor="title">タイトル</Label>
@@ -182,9 +144,6 @@ const PostForm: React.FC<PostFormProps> = ({
             onChange={handleImageChange}
             className="p-2 border rounded-lg"
           />
-          {errors.thumbnailImageKey && (
-            <p className="text-red-500">{errors.thumbnailImageKey.message}</p>
-          )}
         </div>
 
         {/* カテゴリ選択 */}
@@ -226,7 +185,7 @@ const PostForm: React.FC<PostFormProps> = ({
           <button
             type="submit"
             className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg"
-            disabled={isSubmitting} // 送信中はボタンを無効化
+            disabled={isSubmitting}
           >
             {isSubmitting ? "処理中..." : buttonText}
           </button>
