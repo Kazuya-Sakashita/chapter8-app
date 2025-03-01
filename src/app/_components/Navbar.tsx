@@ -31,12 +31,15 @@ const Navbar: React.FC = function Navbar() {
         <Link href="/" className="text-base font-bold">
           Blog
         </Link>
-
         {/* メニューアイテムを表示する */}
         <ul className="flex space-x-4">
-          {!session ? (
-            // sessionがない（未ログイン）場合
+          {session === undefined ? (
+            // セッション確認中（ローディング中）
+            <li className="text-gray-400">セッション確認中...</li>
+          ) : session === null ? (
+            // 未ログイン
             <>
+              <li className="text-red-400">未ログインです</li>
               <li>
                 <Link href="/login" className="text-base font-bold">
                   ログイン
@@ -49,15 +52,15 @@ const Navbar: React.FC = function Navbar() {
               </li>
             </>
           ) : (
-            // sessionがある（ログインしている）場合
+            // ログイン済み
             <>
               <Link href="/admin/posts" className="header-link">
                 管理画面
               </Link>
               <li>
                 <button
-                  onClick={handleLogout} // ログアウトボタンがクリックされたらhandleLogout関数を実行
-                  className="text-base font-bold text-red-500" // ログアウトボタンのスタイル
+                  onClick={handleLogout}
+                  className="text-base font-bold text-red-500"
                 >
                   ログアウト
                 </button>
@@ -70,7 +73,7 @@ const Navbar: React.FC = function Navbar() {
               お問い合わせ
             </Link>
           </li>
-        </ul>
+        </ul>{" "}
       </div>
     </nav>
   );
