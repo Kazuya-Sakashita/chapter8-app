@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { verifyToken } from "@/app/admin/_lib/auth"; // トークン検証関数をインポート
 
 const prisma = new PrismaClient();
 
+// GET リクエスト: 特定のカテゴリを取得
 export const GET = async (
   request: NextRequest,
   { params }: { params: { categoryId: string } }
@@ -10,6 +12,7 @@ export const GET = async (
   const { categoryId } = params;
 
   try {
+    // GET リクエストに対してトークン検証は不要
     const category = await prisma.category.findUnique({
       where: {
         id: parseInt(categoryId),
@@ -28,9 +31,12 @@ export const PUT = async (
   request: NextRequest,
   { params }: { params: { categoryId: string } }
 ) => {
-  console.log("PUTここを確認params:", params);
   const { categoryId } = params;
   const { name }: { name: string } = await request.json();
+
+  // トークンを検証
+  const authenticatedUser = await verifyToken(request, request); // トークン検証
+  console.log("トークン検証成功:", authenticatedUser); // トークン検証が成功した場合にユーザー情報をログに出力
 
   // `id` を数値に変換
   const categoryIdNumber = parseInt(categoryId);
@@ -50,7 +56,6 @@ export const PUT = async (
 
     return NextResponse.json({ status: "OK", category }, { status: 200 });
   } catch (error) {
-    // errorをError型にキャスト
     if (error instanceof Error) {
       console.error("更新エラー:", error);
       return NextResponse.json(
@@ -58,7 +63,6 @@ export const PUT = async (
         { status: 400 }
       );
     }
-    // `error` が `Error` 型でない場合のフォールバック
     return NextResponse.json(
       { status: "error", message: "不明なエラーが発生しました" },
       { status: 500 }
@@ -71,8 +75,11 @@ export const DELETE = async (
   request: NextRequest,
   { params }: { params: { categoryId: string } }
 ) => {
-  console.log("DELETEここを確認params:", params);
   const { categoryId } = params;
+
+  // トークンを検証
+  const authenticatedUser = await verifyToken(request, request); // トークン検証
+  console.log("トークン検証成功:", authenticatedUser); // トークン検証が成功した場合にユーザー情報をログに出力
 
   // `id` を数値に変換
   const categoryIdNumber = parseInt(categoryId);
@@ -94,7 +101,6 @@ export const DELETE = async (
       { status: 200 }
     );
   } catch (error) {
-    // errorをError型にキャスト
     if (error instanceof Error) {
       console.error("削除エラー:", error);
       return NextResponse.json(
@@ -102,7 +108,6 @@ export const DELETE = async (
         { status: 400 }
       );
     }
-    // `error` が `Error` 型でない場合のフォールバック
     return NextResponse.json(
       { status: "error", message: "不明なエラーが発生しました" },
       { status: 500 }

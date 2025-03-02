@@ -6,15 +6,18 @@ import Input from "@/app/contact/form/Input";
 import Label from "@/app/contact/form/Label";
 import { Post } from "@/app/_types/post";
 import { useAdminCategories } from "../../categories/_hooks/useAdminCategories";
+import PostImageUploader from "./PostImageUploader"; // 画像アップローダーをインポート
+
+type PostFormData = {
+  title: string;
+  content: string;
+  thumbnailImageKey: string;
+  categories: number[];
+};
 
 type PostFormProps = {
   initialData?: Post;
-  onSubmit: (postData: {
-    title: string;
-    content: string;
-    thumbnailUrl: string;
-    categories: number[];
-  }) => void;
+  onSubmit: (postData: PostFormData) => void;
   onDelete?: () => void;
   buttonText: string;
 };
@@ -28,25 +31,26 @@ const PostForm: React.FC<PostFormProps> = ({
   const { categories, isLoading: isCategoriesLoading } = useAdminCategories();
 
   const {
+    control,
     register,
     handleSubmit,
-    control,
     setValue,
-    formState: { errors, isSubmitting }, // isSubmitting を取得
-  } = useForm({
+    formState: { errors, isSubmitting },
+  } = useForm<PostFormData>({
     defaultValues: {
       title: initialData?.title || "",
       content: initialData?.content || "",
-      thumbnailUrl: initialData?.thumbnailUrl || "",
+      thumbnailImageKey: initialData?.thumbnailImageKey || "",
       categories: initialData?.categories?.map((category) => category.id) || [],
     },
   });
 
+  // 初期データがある場合にフォームにセットする
   useEffect(() => {
     if (initialData) {
       setValue("title", initialData.title);
       setValue("content", initialData.content);
-      setValue("thumbnailUrl", initialData.thumbnailUrl);
+      setValue("thumbnailImageKey", initialData.thumbnailImageKey);
       setValue(
         "categories",
         initialData.categories.map((category) => category.id)
@@ -87,15 +91,8 @@ const PostForm: React.FC<PostFormProps> = ({
           )}
         </div>
 
-        {/* サムネイルURL */}
-        <div className="flex flex-col mb-6">
-          <Label htmlFor="thumbnailUrl">サムネイルURL</Label>
-          <Input
-            id="thumbnailUrl"
-            {...register("thumbnailUrl")}
-            placeholder="サムネイル画像のURLを入力"
-          />
-        </div>
+        {/* 画像アップローダー */}
+        <PostImageUploader control={control} setValue={setValue} />
 
         {/* カテゴリ選択 */}
         <div className="flex flex-col mb-6">
@@ -136,7 +133,7 @@ const PostForm: React.FC<PostFormProps> = ({
           <button
             type="submit"
             className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg"
-            disabled={isSubmitting} // 送信中はボタンを無効化
+            disabled={isSubmitting}
           >
             {isSubmitting ? "処理中..." : buttonText}
           </button>
@@ -147,7 +144,7 @@ const PostForm: React.FC<PostFormProps> = ({
               type="button"
               onClick={onDelete}
               className="bg-red-500 text-white font-bold py-2 px-4 rounded-lg ml-4"
-              disabled={isSubmitting} // 削除ボタンも無効化
+              disabled={isSubmitting}
             >
               削除
             </button>

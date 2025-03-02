@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { fetcher } from "@/app/lib/fetcher";
 import { Post } from "@/app/_types/post";
 import { Category } from "@/app/_types/category";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 /**
  * API から取得する記事データの型 (API レスポンス用)
@@ -23,7 +24,7 @@ const formatPost = (data: PostFromAPI): Post => ({
   content: data.content,
   createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : "",
   updatedAt: data.updatedAt ? new Date(data.updatedAt).toISOString() : "",
-  thumbnailUrl: data.thumbnailUrl,
+  thumbnailImageKey: data.thumbnailImageKey,
   categories: data.postCategories
     ? data.postCategories.map((pc) => ({
         id: pc.category.id,
@@ -36,8 +37,11 @@ const formatPost = (data: PostFromAPI): Post => ({
  * 記事一覧を取得（管理者用）
  */
 export const useAdminPosts = () => {
+  const { token } = useSupabaseSession(); // adminの時にのみtokenを取得
+  console.log("token:", token);
+
   const { data, error, isLoading, mutate } = useSWR<{ posts: PostFromAPI[] }>(
-    "/api/admin/posts",
+    ["/api/admin/posts"],
     fetcher
   );
 

@@ -11,7 +11,7 @@ type PostFromPrisma = {
   id: number;
   title: string;
   content: string;
-  thumbnailUrl: string;
+  thumbnailImageKey: string;
   createdAt: string;
   updatedAt: string;
   categories: { id: number; name: string }[];
@@ -53,7 +53,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
           content: post.content,
           createdAt: post.createdAt,
           updatedAt: post.updatedAt,
-          thumbnailUrl: post.thumbnailUrl,
+          thumbnailImageKey: post.thumbnailImageKey,
           categories:
             post.categories?.map((category: Category) => ({
               id: category.id,
@@ -101,7 +101,7 @@ export const fetchPostById = async (postId: string): Promise<Post> => {
     content: data.post.content,
     createdAt: new Date(data.post.createdAt).toISOString(),
     updatedAt: new Date(data.post.updatedAt).toISOString(),
-    thumbnailUrl: data.post.thumbnailUrl,
+    thumbnailImageKey: data.post.thumbnailImageKey,
     categories: data.post.postCategories.map((pc: PostCategoryType) => ({
       id: pc.category.id,
       name: pc.category.name,

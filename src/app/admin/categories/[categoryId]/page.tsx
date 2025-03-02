@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import CategoryForm from "@/app/admin/categories/_components/CategoryForm";
+import { useAdminCategoryById } from "@/app/admin/categories/_hooks/useAdminCategories";
 import {
-  useAdminCategoryById,
-  useAdminCategories,
-} from "@/app/admin/categories/_hooks/useAdminCategories";
+  useUpdateAdminCategory,
+  useDeleteAdminCategory,
+} from "@/app/admin/categories/_hooks/useMutateAdminCategories";
 
 export default function EditCategoryPage() {
   const params = useParams();
@@ -19,33 +21,28 @@ export default function EditCategoryPage() {
   // カテゴリデータ取得
   const { category, isLoading, isError } =
     useAdminCategoryById(categoryIdString);
-  const { mutate } = useAdminCategories(); // `useAdminCategories` の `mutate` を使用
+
+  // カテゴリ更新と削除のフック
+  const { updateCategory } = useUpdateAdminCategory();
+  const { deleteCategory } = useDeleteAdminCategory();
+
+  const [error, setError] = useState<string | null>(null); // エラーメッセージ
 
   // カテゴリ更新処理
   const handleSubmit = async (name: string) => {
+    setError(null); // エラーメッセージをリセット
     try {
       console.log("送信データ:", { name }); // デバッグ用
 
-      const response = await fetch(
-        `/api/admin/categories/${categoryIdString}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name }),
-        }
-      );
+      // カテゴリの更新
+      await updateCategory(categoryIdString, name);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("APIエラー:", errorData); // APIのエラーレスポンスを確認
-        throw new Error(errorData.message || "カテゴリの更新に失敗しました");
-      }
-
-      console.log("カテゴリ更新成功"); // 成功ログ
-      await mutate(); // `useAdminCategories` のキャッシュを更新
+      // 更新成功後、リダイレクト
       router.push("/admin/categories");
     } catch (err) {
-      console.error("カテゴリ更新に失敗:", err);
+      setError(
+        err instanceof Error ? err.message : "不明なエラーが発生しました"
+      );
     }
   };
 
@@ -55,24 +52,13 @@ export default function EditCategoryPage() {
     try {
       console.log("削除リクエスト:", categoryIdString); // デバッグ用
 
-      const response = await fetch(
-        `/api/admin/categories/${categoryIdString}`,
-        {
-          method: "DELETE",
-        }
-      );
+      // カテゴリの削除
+      await deleteCategory(categoryIdString);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("APIエラー:", errorData);
-        throw new Error(errorData.message || "カテゴリの削除に失敗しました");
-      }
-
-      console.log("カテゴリ削除成功");
-      await mutate(); // `useAdminCategories` のキャッシュを更新
+      // 削除成功後、リダイレクト
       router.push("/admin/categories");
     } catch (err) {
-      console.error("削除中にエラー発生:", err);
+      setError(err instanceof Error ? err.message : "削除中にエラー発生");
     }
   };
 
@@ -84,12 +70,14 @@ export default function EditCategoryPage() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">カテゴリ編集</h1>
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+
       <CategoryForm
         initialName={category.name}
         categoryId={categoryIdString}
         onSubmit={handleSubmit}
         buttonText="更新"
-        error={isError?.message || null} // `isLoading` 削除
+        error={error}
         onDelete={handleDelete}
       />
     </div>

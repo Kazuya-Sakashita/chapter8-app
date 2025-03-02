@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { verifyToken } from "@/app/admin/_lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -90,17 +91,21 @@ export const PUT = async (
     );
   }
 
+  // トークンを検証
+  const authenticatedUser = await verifyToken(request, request); // トークン検証
+  console.log("トークン検証成功:", authenticatedUser); // トークン検証が成功した場合にユーザー情報をログに出力
+
   // リクエストのデータを受け取る
   const {
     title,
     content,
     categories,
-    thumbnailUrl,
+    thumbnailImageKey,
   }: {
     title: string;
     content: string;
     categories: number[];
-    thumbnailUrl: string;
+    thumbnailImageKey: string;
   } = await request.json();
 
   try {
@@ -109,7 +114,7 @@ export const PUT = async (
       // 投稿を更新
       const post = await prisma.post.update({
         where: { id: postIdNumber },
-        data: { title, content, thumbnailUrl },
+        data: { title, content, thumbnailImageKey },
       });
 
       // 既存のポストカテゴリーを削除
@@ -165,6 +170,10 @@ export const DELETE = async (
       { status: 400 }
     );
   }
+
+  // トークンを検証
+  const authenticatedUser = await verifyToken(request, request); // トークン検証
+  console.log("トークン検証成功:", authenticatedUser); // トークン検証が成功した場合にユーザー情報をログに出力
 
   try {
     // 投稿を削除

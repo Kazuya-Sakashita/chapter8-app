@@ -1,5 +1,6 @@
 "use client";
 
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useAdminCategories } from "../_hooks/useAdminCategories";
 
 /**
@@ -7,12 +8,16 @@ import { useAdminCategories } from "../_hooks/useAdminCategories";
  */
 export const useCreateAdminCategory = () => {
   const { mutate } = useAdminCategories(); // 一覧のキャッシュ更新用
+  const { token } = useSupabaseSession();
 
   const createCategory = async (name: string) => {
     try {
       const response = await fetch("/api/admin/categories", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
         body: JSON.stringify({ name }),
       });
 
@@ -36,12 +41,16 @@ export const useCreateAdminCategory = () => {
  */
 export const useUpdateAdminCategory = () => {
   const { mutate } = useAdminCategories(); // 一覧のキャッシュ更新用
+  const { token } = useSupabaseSession();
 
   const updateCategory = async (categoryId: string, name: string) => {
     try {
       const response = await fetch(`/api/admin/categories/${categoryId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
         body: JSON.stringify({ name }),
       });
 
@@ -65,11 +74,16 @@ export const useUpdateAdminCategory = () => {
  */
 export const useDeleteAdminCategory = () => {
   const { mutate } = useAdminCategories(); // 一覧のキャッシュ更新用
+  const { token } = useSupabaseSession();
 
   const deleteCategory = async (categoryId: string) => {
     try {
       const response = await fetch(`/api/admin/categories/${categoryId}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
       });
 
       if (!response.ok) throw new Error("カテゴリの削除に失敗しました");
