@@ -1,5 +1,6 @@
 "use client";
 
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useAdminPosts } from "../_hooks/useAdminPosts";
 
 /**
@@ -41,6 +42,7 @@ export const useCreateAdminPost = () => {
  */
 export const useUpdateAdminPost = () => {
   const { mutate } = useAdminPosts(); // 記事一覧のキャッシュ更新用
+  const { token } = useSupabaseSession();
 
   const updatePost = async (
     postId: string,
@@ -56,7 +58,10 @@ export const useUpdateAdminPost = () => {
     try {
       const response = await fetch(`/api/admin/posts/${postId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
         body: JSON.stringify(postData),
       });
 
@@ -84,11 +89,16 @@ export const useUpdateAdminPost = () => {
  */
 export const useDeleteAdminPost = () => {
   const { mutate } = useAdminPosts(); // 記事一覧のキャッシュ更新用
+  const { token } = useSupabaseSession();
 
   const deletePost = async (postId: string) => {
     try {
       const response = await fetch(`/api/admin/posts/${postId}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
       });
 
       if (!response.ok) throw new Error("記事の削除に失敗しました");

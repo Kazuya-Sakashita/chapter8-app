@@ -1,3 +1,4 @@
+import { verifyToken } from "@/app/admin/_lib/auth";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 
@@ -27,6 +28,13 @@ interface CreateCategoryRequestBody {
 
 export const POST = async (request: Request) => {
   try {
+    const req = request; // NextRequest 型を使用
+    const res = {} as NextResponse; // 空の NextResponse を作成
+
+    // トークンを検証
+    const authenticatedUser = await verifyToken(req, res); // トークン検証
+    console.log("トークン検証成功:", authenticatedUser); // 検証成功時のログ
+
     // リクエストのbodyを取得
     const body = await request.json();
 
